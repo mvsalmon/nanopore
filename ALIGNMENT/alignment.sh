@@ -2,6 +2,12 @@
 #commands used when processing fastqfile data, following epi2me guides
 #run from SCRIPTS dir
 
+
+##TO DO
+#pycoQC
+#sup basecalling
+
+
 run_name=$1
 rundir=$2
 
