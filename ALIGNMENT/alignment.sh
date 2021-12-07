@@ -10,6 +10,7 @@
 
 run_name=$1
 rundir=$2
+bed_file=$3
 
 #source conda
 source /home/nanopore/miniconda3/etc/profile.d/conda.sh
@@ -63,10 +64,6 @@ if [ -e $adaptive_file ] ; then
   mkdir ./adaptive_stats
   cd ./adaptive_stats
 
-  #stats
-  conda activate r_env
-  Rscript ~/nanopore_runs/SCRIPTS/ALIGNMENT/adaptive_stats.r $adaptive_file $run_name
-
   conda activate py3.8
 
   echo "Subseting bam file..."
@@ -80,8 +77,10 @@ if [ -e $adaptive_file ] ; then
 
   #calculate on target percentages (bedtools)
   #IN PROGRESS
-  # for f in *sorted.bam; do
-  #   tot_reads=$(samtools flagstat $f | awk '{if(NR==1) print $0}')
-  #   AS_reads=$(bedtools coverage -a [BEDFILE] -b $f | awk '{sum+=$5} END{print sum}')
+  #per-base
+
+  #stats
+  conda activate r_env
+  Rscript ~/nanopore_runs/SCRIPTS/ALIGNMENT/adaptive_stats.r $adaptive_file $run_name
 
 fi
