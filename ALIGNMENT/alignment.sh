@@ -6,7 +6,7 @@
 ##TO DO
 #pycoQC
 #sup basecalling
-
+#test update!!
 
 run_name=$1
 rundir=$2
