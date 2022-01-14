@@ -1,13 +1,11 @@
 require(tidyverse)
 
 #load arguments
-#1 adapteive sampling summary fastqfile
+#1 adaptive sampling summary fastqfile
 #2 run name
 
 args = commandArgs(trailingOnly = TRUE)
-#print(args)
-#adaptive_seq <- read.csv(args[1])
-#print(head(adaptive_seq))
+
 
 adaptive_stats <- function(adaptive_seq, run_name){
 
