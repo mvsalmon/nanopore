@@ -9,6 +9,7 @@ MS additions for handling adaptive sampling output
 
 import pysam
 
+
 def get_reads(adaptive_output):
     #Added by MS
     #iterate over adaptive output file and store each read_id in dict {decision:[id1, id2, id3...]}
@@ -58,16 +59,16 @@ def extract_reads(options):
                 for x in iterator:
                     out.write(x)
     elif type(n) == dict:
-        for key in n:
-            out_name = key + '_' + options.out
+        for decision in n:
+            out_name = decision + '_' + options.out
             out = pysam.Samfile(out_name, 'wb', header=header)
-            for name in n[key]:
+            for id in n[decision]:
                 try:
-                    name_indexed.find(name)
+                    name_indexed.find(id)
                 except KeyError:
                     pass
                 else:
-                    iterator = name_indexed.find(name)
+                    iterator = name_indexed.find(id)
                     for x in iterator:
                         out.write(x)
 
@@ -80,4 +81,5 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--adaptive_output', help='adaptive sampling output file', required=False)
     parser.add_argument('-o', '--out', help='file name for extracted alignments', required=True)
     options = parser.parse_args()
+    
     extract_reads(options)
