@@ -1,12 +1,12 @@
-#! /bin/bash
+#!/bin/bash
 #commands used when processing fastqfile data, following epi2me guides
 #run from SCRIPTS dir
 
 
 ##TO DO
 #pycoQC
-#sup basecalling
-#test update!!
+#sup basecalling?
+#SV  calling
 
 run_name=$1
 rundir=$2
@@ -67,7 +67,7 @@ if [ -e $adaptive_file ] ; then
   conda activate py3.8
 
   echo "Subseting bam file..."
-  python ~/nanopore_runs/SCRIPTS/ALIGNMENT/extract_reads_adaptive.py -b ../alignment/"$run_name".bam -a $adaptive_file -o "$run_name".bam
+  python ~/nanopore_runs/SCRIPTS/nanopore/ALIGNMENT/extract_reads_adaptive.py -b ../alignment/"$run_name".bam -a $adaptive_file -o "$run_name".bam
 
   #index subsetted files
   for f in *.bam; do
@@ -81,6 +81,6 @@ if [ -e $adaptive_file ] ; then
 
   #stats
   conda activate r_env
-  Rscript ~/nanopore_runs/SCRIPTS/ALIGNMENT/adaptive_stats.r $adaptive_file $run_name
+  Rscript ~/nanopore_runs/SCRIPTS/nanopore/ALIGNMENT/adaptive_stats.r $adaptive_file $run_name
 
 fi
