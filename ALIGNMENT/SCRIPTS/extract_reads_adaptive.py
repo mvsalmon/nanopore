@@ -59,6 +59,7 @@ def extract_reads(options):
                 iterator = name_indexed.find(name)
                 for x in iterator:
                     out.write(x)
+    #write bam file for each adaptive decision. Added by MS
     elif type(n) == dict:
         for decision in n:
             out_name = decision + '_' + options.out
