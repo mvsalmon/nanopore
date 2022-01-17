@@ -77,7 +77,16 @@ if [ -e $adaptive_file ] ; then
 
   #calculate on target percentages (bedtools)
   #IN PROGRESS
-  #per-base
+  mkdir ./COVERAGE
+
+
+  for f in *.sorted.bam; do
+    #create directories for each adaptive decision
+    decision=${f%%.bam*}
+    mkdir ./COVERAGE/"$decision"
+    #run bedtools to calculate depth of each feature in bed_file
+    bedtools -a $bed_file -b $f -d > ./COVERAGE/"$decision"/"$f"_per_base_depth.tsv
+  done
 
   #stats
   conda activate r_env
