@@ -31,7 +31,6 @@ while read bam_file; do
 done < bam_files.txt
 
 #calculate on target percentages (bedtools)
-#IN PROGRESS
 mkdir ./COVERAGE
 
 for f in *.sorted.bam; do
@@ -43,6 +42,9 @@ for f in *.sorted.bam; do
 done
 
 #stats
+#TO ADD TO R SCRIPT 
+##per gene coverage
+##depth calculations
 conda deactivate
 conda activate r_env
 Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r $adaptive_summary $run_name
