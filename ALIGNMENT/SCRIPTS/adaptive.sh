@@ -37,8 +37,8 @@ for f in *.sorted.bam; do
   #create directories for each adaptive decision
   decision=${f%%.bam*}
   mkdir ./COVERAGE/"$decision"
-  #run bedtools to calculate depth of each feature in bed_file
-  bedtools coverage -a $bed_file -b $f -d > ./COVERAGE/"$decision"/"$f"_per_base_depth.tsv
+  #run bedtools to calculate coverage summary and per base depth of each feature in bed_file
+  bedtools coverage -a $bed_file -b $f -d > ./COVERAGE/"$decision"/"$decision"_per_base_depth.tsv
 done
 
 #stats
@@ -47,4 +47,17 @@ done
 ##depth calculations
 conda deactivate
 conda activate r_env
+
+cd ./COVERAGE
+
+#descriptive stats from adaptive sampling
 Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r $adaptive_summary $run_name
+
+
+#depth and coverage calculations
+for dir in */; do
+  echo $dir
+  cd $dir
+  Rscript $pipeline_dir/SCRIPTS/coverage.r *.tsv $run_name
+  cd ../
+done
