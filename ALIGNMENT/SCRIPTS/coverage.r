@@ -35,23 +35,27 @@ coverage <- function(cov_file, run_name, save_dir){
     geom_bar(stat = 'identity') +
     geom_label() +
     labs(title = sprintf("%s mean depth", run_name),
-         y = 'Mean Depth')
+         y = 'Mean Depth') +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
   
-  ggsave(sprintf("%s_depth_plot.pdf", run_name), depth_plot)
+  ggsave(sprintf("%s_depth_plot.pdf", run_name), depth_plot, path = save_dir)
   
   #plot fractional coverage per target
   coverage_plot <- ggplot(depth_table, aes(x = HGNC_gene, y = fractionalCoverage, label = round(fractionalCoverage, 2))) +
     geom_bar(stat = 'identity') +
     geom_label() +
     labs(title = sprintf("%s target coverage", run_name),
-         y = 'Coverage')
+         y = 'Coverage') +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
   
-  ggsave(sprintf("%s_coverage_plot.pdf", run_name), coverage_plot)
+  ggsave(sprintf("%s_coverage_plot.pdf", run_name), coverage_plot,  path = save_dir)
   }
 
 
 for(d in dir()){
-  cov_file <- read.table(args[1], col.names = c("chrom", "chromStart", "chromEnd", "name", "basePos", "depthAtPos"))
+  #cov_file <- read.table(args[1], col.names = c("chrom", "chromStart", "chromEnd", "name", "basePos", "depthAtPos"))
+  cov_file <- read.table(list.files(d, pattern = "\\.tsv$", full.names = TRUE),
+                         col.names = c("chrom", "chromStart", "chromEnd", "name", "basePos", "depthAtPos"))
   
   coverage(cov_file, args[2], d)
   }

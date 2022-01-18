@@ -32,7 +32,8 @@ adaptive_stats <- function(adaptive_seq, run_name){
         labs(title = paste(run_name),
              subtitle = 'Boxes show % of reads in each group',
               x = "Decision",
-              y = "Number of reads")
+              y = "Number of reads") +
+    theme(axis.text.x = element_text(angle = 45))
 
   ggsave(sprintf("%s_adaptive_stats.pdf", run_name), read_count_plot)
   }

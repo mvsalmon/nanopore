@@ -48,16 +48,10 @@ done
 conda deactivate
 conda activate r_env
 
-cd ./COVERAGE
-
 #descriptive stats from adaptive sampling
 Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r $adaptive_summary $run_name
 
+cd ./COVERAGE
 
 #depth and coverage calculations
-for dir in */; do
-  echo $dir
-  cd $dir
-  Rscript $pipeline_dir/SCRIPTS/coverage.r *.tsv $run_name
-  cd ../
-done
+Rscript $pipeline_dir/SCRIPTS/coverage.r *.tsv $run_name
