@@ -4,16 +4,21 @@ require(tidyverse)
 #1 adaptive sampling summary fastqfile
 #2 run name
 
+
 args = commandArgs(trailingOnly = TRUE)
 
 
-adaptive_stats <- function(adaptive_seq, run_name){
+# Adaptive Stats function -------------------------------------------------
 
+
+adaptive_stats <- function(adaptive_seq, run_name){
+#descriptive stats for nanopore adapitive sampling summary file
+  
   #tally adaptive seq descisions
   counts <- count(adaptive_seq, decision) %>%
             mutate(pct = n/sum(n)*100)
 
-  write.table(counts, "adaptive_seq_stats.txt", sep = " ", row.names = F, quote = F)
+  write.table(counts, sprintf("%s_adaptive_seq_stats.txt", run_name), sep = " ", row.names = F, quote = F)
 
   #split by decision
   decisions <- adaptive_seq %>%
@@ -36,7 +41,7 @@ adaptive_stats <- function(adaptive_seq, run_name){
               x = "Decision",
               y = "Number of reads")
 
-  ggsave(paste0(run_name, "_adaptive_stats.pdf"), read_count_plot)
+  ggsave(sprintf("%s_adaptive_stats.pdf", run_name), read_count_plot)
   }
 
 adaptive_stats(read.csv(args[1]), args[2])

@@ -42,7 +42,7 @@ for f in *.sorted.bam; do
 done
 
 #stats
-#TO ADD TO R SCRIPT 
+#TO ADD TO R SCRIPT
 ##per gene coverage
 ##depth calculations
 conda deactivate
