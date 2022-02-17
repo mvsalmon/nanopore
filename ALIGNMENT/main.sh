@@ -4,8 +4,7 @@
 
 
 ##TO DO
-#pycoQC
-#sup basecalling?
+#hac/sup re-basecalling?
 #SV  calling
 
 #Usage
@@ -17,7 +16,7 @@ helpFunction()
    echo "Usage: $0 -h display help -n run_name -d run_dir -o output_dir -b bed_file"
    echo -e "\t-n Name of Nanopore run"
    echo -e "\t-d Directory containng Nanopore run data"
-   echo -e "\t-b BED file for adaptive sampling analysis" #make theis optional
+   echo -e "\t-b BED file for adaptive sampling analysis" #make this optional
    exit 1 # Exit script after printing help
 }
 
@@ -59,6 +58,7 @@ pycoQC \
 --html_outfile ~/"$output_dir"/"$run_name"/fastq/pycoQC/"$run_name"_pycoQC.html \
 --quiet
 
+conda activate
 ####### ALIGNMENT ##########
 #align merged fastq to grch38 reference with minimap2
 #-a: output SAM file
@@ -79,7 +79,6 @@ samtools index "$run_name".bam
 
 #save stats
 samtools flagstat "$run_name".bam > "$run_name"_flagstat.txt
-
 
 cd ../
 
