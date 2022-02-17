@@ -12,27 +12,27 @@
 helpFunction()
 {
    echo ""
+   echo "Pipeline for analysis of Nanopore runs. Data saved to ~/nanopore_runs/"
+   echo ""
    echo "Usage: $0 -h display help -n run_name -d run_dir -o output_dir -b bed_file"
-   echo -e "\t-n Name of Nanopre run"
+   echo -e "\t-n Name of Nanopore run"
    echo -e "\t-d Directory containng Nanopore run data"
-   echo -e "\t-o Directory to write results"
-   echo -e "\t-b BED file for adaptive sampling analysis"
+   echo -e "\t-b BED file for adaptive sampling analysis" #make theis optional
    exit 1 # Exit script after printing help
 }
 
 #parse arguments
-while getopts n:d:o:b:h opt; do
+while getopts n:d:b:h opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
-    o) output_dir="$OPTARG";;
     b) bed_file="$OPTARG";;
     h) helpFunction;;
   esac
 done
 
 #Help if arguments are empty
-if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || [ -z "$bed_file" ]
+if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$bed_file" ]
 then
    echo "Some or all of the arguments are empty";
    helpFunction
@@ -44,30 +44,22 @@ fi
 pipeline_dir=$(pwd)
 
 #create analysis dirs
-mkdir -p ~/"$output_dir"/"$run_name"/alignment
-mkdir -p ~/"$output_dir"/"$run_name"/fastq/pycoQC
+mkdir -p ~/nanopore_runs/"$run_name"/alignment
+mkdir -p ~/nanopore_runs/"$run_name"/fastq/pycoQC
 
-
-########PYCOQC###############
+######## QC ###############
 #source conda
 source /home/nanopore/miniconda3/etc/profile.d/conda.sh
 conda activate pycoQC
 
-pycoQC --summary_file
+echo "Running pycoQC..."
 
-conda activate py3.8
+pycoQC \
+--summary_file "$run_dir"/sequencing_summary* \
+--html_outfile ~/"$output_dir"/"$run_name"/fastq/pycoQC/"$run_name"_pycoQC.html \
+--quiet
 
-
-
-cd ~/nanopore_runs/"$run_name"
-
-#merge fastqfiles
-cat "$run_dir"/fastq_pass/*.gz > ./fastq/"$run_name".fastq.gz
-
-#fastq stats with seqkit
-echo "Running seqkit..."
-seqkit stats ./fastq/"$run_name".fastq.gz > ./fastq/"$run_name"_seqkit_stats.txt
-
+####### ALIGNMENT ##########
 #align merged fastq to grch38 reference with minimap2
 #-a: output SAM file
 #-x map-ont: nanopore mode (default)
