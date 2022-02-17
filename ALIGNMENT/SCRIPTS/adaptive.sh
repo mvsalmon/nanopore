@@ -17,9 +17,13 @@ done
 mkdir ./adaptive_stats
 cd ./adaptive_stats
 
+conda activate adaptiveStats
+
 #create bam files containg read ids for each adaptive sampling decision
 echo "Subseting bam file..."
 python $pipeline_dir/SCRIPTS/extract_reads_adaptive.py -b ../alignment/"$run_name".bam -a $adaptive_summary -o "$run_name".bam
+
+conda activate
 
 #get list of bam files from last step
 ls *.bam > bam_files.txt
@@ -41,17 +45,17 @@ for f in *.sorted.bam; do
   bedtools coverage -a $bed_file -b $f -d > ./COVERAGE/"$decision"/"$decision"_per_base_depth.tsv
 done
 
+
 #stats
 #TO ADD TO R SCRIPT
 ##per gene coverage
 ##depth calculations
-conda deactivate
-conda activate r_env
+
 
 #descriptive stats from adaptive sampling
 Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r $adaptive_summary $run_name
 
 cd ./COVERAGE
 
-#depth and coverage calculations
+#depth and coverage calculations on .tsv output from bedtools
 Rscript $pipeline_dir/SCRIPTS/coverage.r *.tsv $run_name

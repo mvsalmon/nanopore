@@ -59,6 +59,7 @@ pycoQC \
 --quiet
 
 conda activate
+
 ####### ALIGNMENT ##########
 #align merged fastq to grch38 reference with minimap2
 #-a: output SAM file
@@ -82,6 +83,7 @@ samtools flagstat "$run_name".bam > "$run_name"_flagstat.txt
 
 cd ../
 
+####### ADAPTIVE SAMPLING ##########
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
 adaptive_summary=$(find $run_dir -name adaptive_sampling_*.csv -type f)
 if [ -e $adaptive_summary ] ; then
