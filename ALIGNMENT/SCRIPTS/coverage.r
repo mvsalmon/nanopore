@@ -15,7 +15,7 @@ coverage <- function(cov_file, run_name, save_dir){
   coverage <- cov_file %>%
     filter(depthAtPos != 0) %>%
     tally(name = 'coveredBases')
-    
+
     # if(str_detect(coverage$gene, "^ENST")){
     #   coverage <- coverage %>%
     #     separate(gene, into = c('Transcript_ID', 'gene'), sep = '_')
@@ -62,7 +62,7 @@ for(d in dir()){
                          col.names = c("chrom", "chromStart", "chromEnd", "gene", "basePos", "depthAtPos")) %>%
     group_by(gene)
 
-  coverage(cov_file, args[2], d)
+  coverage(cov_file, args[1], d)
   }
 
 
