@@ -12,7 +12,7 @@ coverage <- function(cov_file, run_name, save_dir){
     group_by(gene)
 
   #count bases with non-zero coverage
-  coverage <- cov_file %>%
+  coverage_data <- cov_file %>%
     filter(depthAtPos != 0) %>%
     tally(name = 'coveredBases')
 
@@ -30,7 +30,7 @@ coverage <- function(cov_file, run_name, save_dir){
     #faster to separate summarised data twice than input once
     #separate(gene, into = c('Transcript_ID', 'gene'), sep = '_') %>%
     #join coverage data
-    left_join(coverage) %>%
+    left_join(coverage_data) %>%
     #calculate fractional coverage of target. 1 = all bases in target present in at least 1 read
     mutate(fractionalCoverage = coveredBases/featureLength)
 
