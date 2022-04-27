@@ -31,7 +31,7 @@ while getopts n:d:b:h opt; do
 done
 
 #Help if arguments are empty
-if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$bed_file" ]
+if [ -z "$run_name" ] || [ -z "$run_dir" ]
 then
    echo "Some or all of the arguments are empty";
    helpFunction
@@ -46,6 +46,9 @@ pipeline_dir=$(pwd)
 mkdir -p ~/nanopore_runs/"$run_name"/alignment
 mkdir -p ~/nanopore_runs/"$run_name"/fastq/pycoQC
 
+#merge fastq files to analysis dirs
+cat "$run_dir"/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
+
 ######## QC ###############
 #source conda
 source /home/nanopore/miniconda3/etc/profile.d/conda.sh
@@ -55,12 +58,14 @@ echo "Running pycoQC..."
 
 pycoQC \
 --summary_file "$run_dir"/sequencing_summary* \
---html_outfile ~/"$output_dir"/"$run_name"/fastq/pycoQC/"$run_name"_pycoQC.html \
+--html_outfile ~/nanopore_runs/"$run_name"/fastq/pycoQC/"$run_name"_pycoQC.html \
 --quiet
 
 conda activate
 
 ####### ALIGNMENT ##########
+cd ~/nanopore_runs/"$run_name"/
+
 #align merged fastq to grch38 reference with minimap2
 #-a: output SAM file
 #-x map-ont: nanopore mode (default)
