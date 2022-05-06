@@ -54,6 +54,7 @@ pipeline_dir=$(pwd)
 ####### BASECALLING ########
 #bascall from fast5 files in high accuracy mode
 #assumes no basecalling during run
+#kill guppyd service before use
 
 echo "Basecalling..."
 
@@ -102,7 +103,7 @@ conda activate pycoQC
 echo "Running pycoQC..."
 
 pycoQC \
---summary_file "$run_dir"/sequencing_summary* \
+--summary_file ~/nanopore_runs/"$run_name"/fastq/all/sequencing_summary* \
 --html_outfile ~/nanopore_runs/"$run_name"/pycoQC/"$run_name"_pycoQC.html \
 --bam_file ~/nanopore_runs/"$run_name"/alignment/"$run_name".bam \
 --quiet
