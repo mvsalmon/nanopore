@@ -39,29 +39,35 @@ fi
 
 #####MAIN######
 
-#get pipeline dir
-pipeline_dir=$(pwd)
-
 #create analysis dirs
 mkdir -p ~/nanopore_runs/"$run_name"/alignment
-mkdir -p ~/nanopore_runs/"$run_name"/fastq/pycoQC
+mkdir -p ~/nanopore_runs/"$run_name"/fastq/all
+mkdir -p ~/nanopore_runs/"$run_name"/pycoQC
+
+#dir variables
+pipeline_dir=$(pwd)
+
 
 #merge fastq files to analysis dirs
-cat "$run_dir"/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
+#cat "$run_dir"/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
 
-######## QC ###############
-#source conda
-source /home/nanopore/miniconda3/etc/profile.d/conda.sh
-conda activate pycoQC
+####### BASECALLING ########
+#bascall from fast5 files in high accuracy mode
+#assumes no basecalling during run
 
-echo "Running pycoQC..."
+echo "Basecalling..."
 
-pycoQC \
---summary_file "$run_dir"/sequencing_summary* \
---html_outfile ~/nanopore_runs/"$run_name"/fastq/pycoQC/"$run_name"_pycoQC.html \
---quiet
+/opt/ont/ont-guppy/bin/guppy_basecaller --input_path "$run_dir"/fast5* \
+--save_path ~/nanopore_runs/"$run_name"/fastq/all \
+--device cuda:0 \
+--config dna_r9.4.1_450bps_hac.cfg \
+--chunk_size 2000 \
+--chunks_per_runner 256 \
+--gpu_runners_per_device 2 \
+--compress_fastq
 
-conda activate
+#merge fastq
+cat ~/nanopore_runs/"$run_name"/fastq/all/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
 
 ####### ALIGNMENT ##########
 cd ~/nanopore_runs/"$run_name"/
@@ -87,6 +93,22 @@ samtools index "$run_name".bam
 samtools flagstat "$run_name".bam > "$run_name"_flagstat.txt
 
 cd ../
+
+######## QC ###############
+#source conda
+source /home/nanopore/miniconda3/etc/profile.d/conda.sh
+conda activate pycoQC
+
+echo "Running pycoQC..."
+
+pycoQC \
+--summary_file "$run_dir"/sequencing_summary* \
+--html_outfile ~/nanopore_runs/"$run_name"/pycoQC/"$run_name"_pycoQC.html \
+--bam_file ~/nanopore_runs/"$run_name"/alignment/"$run_name".bam \
+--quiet
+
+conda activate
+
 
 ####### ADAPTIVE SAMPLING ##########
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
