@@ -54,9 +54,12 @@ pipeline_dir=$(pwd)
 ####### BASECALLING ########
 #bascall from fast5 files in high accuracy mode
 #assumes no basecalling during run
-#kill guppyd service before use
+
 
 echo "Basecalling..."
+
+#kill any running guppyd service before use
+systemctl stop guppyd.service
 
 /opt/ont/ont-guppy/bin/guppy_basecaller --input_path "$run_dir"/fast5* \
 --save_path ~/nanopore_runs/"$run_name"/fastq/all \
@@ -112,13 +115,15 @@ conda activate
 
 
 ####### ADAPTIVE SAMPLING ##########
+#change to specify if adaptive when running command?
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
-adaptive_summary=$(find $run_dir -name adaptive_sampling_*.csv -type f)
-if [ -e $adaptive_summary ] ; then
-
-  echo "Adaptive sequencing output detected. Processing adaptive sampling data..."
+#adaptive_summary=$(find $run_dir -name adaptive_sampling_*.csv -type f)
+if [ -n "$(find $run_dir -name adaptive_sampling_*.csv)" ]
+then
+  echo "Adaptive sampling output detected. Processing adaptive sampling data..."
 
 #run adaptive sampling analysis script
   bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d $pipeline_dir -n $run_name -s $adaptive_summary -b $bed_file
-
+else
+  echo "No adaptive sampling file detected."
 fi
