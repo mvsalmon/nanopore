@@ -31,7 +31,7 @@ while getopts n:d:b:h opt; do
 done
 
 #Help if arguments are empty
-if [ -z "$run_name" ] || [ -z "$run_dir" ]
+if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$bed_file" ]
 then
    echo "Some or all of the arguments are empty";
    helpFunction
@@ -43,10 +43,11 @@ fi
 mkdir -p ~/nanopore_runs/"$run_name"/alignment
 mkdir -p ~/nanopore_runs/"$run_name"/fastq/all
 mkdir -p ~/nanopore_runs/"$run_name"/pycoQC
+mkdir -p ~/nanopore_runs/"$run_name"/coverage
 
 #dir variables
 pipeline_dir=$(pwd)
-
+work_dir=~/nanopore_runs/"$run_name"
 
 #merge fastq files to analysis dirs
 #cat "$run_dir"/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
@@ -127,3 +128,10 @@ then
 else
   echo "No adaptive sampling file detected."
 fi
+
+
+###### COVERAGE #####
+cd "$work_dir"/coverage
+
+#use mosdepth to generate depth
+mosdepth -by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
