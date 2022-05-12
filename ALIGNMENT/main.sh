@@ -143,10 +143,28 @@ fi
 
 
 ###### COVERAGE #####
-cd "$work_dir"/coverage
+cd "$work_dir"/coverage/
 
+mkdir ./mosdepth
+mkdir ./bedtools
+
+cd ./mosdepth
 #use mosdepth to generate depth
 mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
+
+cd ../bedtools
+#get off target reads
+#bedtools to find reads in bam file that do and do not not overlap regions in bam
+#on target
+bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
+#off target with -v
+bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
+
+samtools index "$run_name"_off_target.bam
+
+#get distribution of read lengths
+samtools stats K562_SS_run3_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
+
 
 ##### CUTESV #####
 cd "$work_dir"
