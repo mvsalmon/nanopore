@@ -1,11 +1,12 @@
 #!/bin/bash
+
 #commands used when processing fastqfile data, following epi2me guides
 #run from SCRIPTS dir
 
 
 ##TO DO
-#hac/sup re-basecalling?
-#SV  calling
+#ref genome variable
+
 
 #Usage
 helpFunction()
@@ -37,6 +38,17 @@ then
    helpFunction
 fi
 
+#check for running guppyd service before use and exit if running
+pid=$( nvidia-smi | grep guppy | awk '{print $5}' )
+
+if [[ "$pid" =~ ^[0-9]+$ ]]; then
+  >&2 echo "EXITING: Previous Guppy instance detected. Kill and retry"
+  exit 1
+#   kill -9 $pid
+# else
+#   >&2 echo "INFO: No previous Guppy detected, running new analysis..."
+fi
+
 #####MAIN######
 
 #create analysis dirs
@@ -49,6 +61,8 @@ mkdir -p ~/nanopore_runs/"$run_name"/coverage
 pipeline_dir=$(pwd)
 work_dir=~/nanopore_runs/"$run_name"
 
+echo "INFO: Working directory $work_dir"
+
 #merge fastq files to analysis dirs
 #cat "$run_dir"/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
 
@@ -56,14 +70,12 @@ work_dir=~/nanopore_runs/"$run_name"
 #bascall from fast5 files in high accuracy mode
 #assumes no basecalling during run
 
-
 echo "Basecalling..."
 
-#kill any running guppyd service before use
-systemctl stop guppyd.service
 
-/opt/ont/ont-guppy/bin/guppy_basecaller --input_path "$run_dir"/fast5* \
---save_path ~/nanopore_runs/"$run_name"/fastq/all \
+#pipe pass and fail fast5 files to guppy
+ls "$run_dir"/fast5*/*.fast5 | \
+/opt/ont/ont-guppy/bin/guppy_basecaller --save_path "$work_dir"/fastq/all \
 --device cuda:0 \
 --config dna_r9.4.1_450bps_hac.cfg \
 --chunk_size 2000 \
@@ -72,10 +84,10 @@ systemctl stop guppyd.service
 --compress_fastq
 
 #merge fastq
-cat ~/nanopore_runs/"$run_name"/fastq/all/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
+cat "$work_dir"/fastq/all/pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
 
 ####### ALIGNMENT ##########
-cd ~/nanopore_runs/"$run_name"/
+cd $work_dir
 
 #align merged fastq to grch38 reference with minimap2
 #-a: output SAM file
@@ -134,4 +146,18 @@ fi
 cd "$work_dir"/coverage
 
 #use mosdepth to generate depth
-mosdepth -by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
+mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
+
+##### CUTESV #####
+cd "$work_dir"
+mkdir ./cuteSV && cd ./cuteSV
+
+#cuteSV for fusion gene detection
+conda activate cuteSV
+
+cuteSV ../alignment/"$run_name".bam \
+~/tools/refgenome/seqs_for_alignment_pipelines/grch38/grch38.fa \
+"$run_name".vcf \
+./ \
+--max_cluster_bias_DEL 100 \
+--diff_ratio_merging_DEL 0.3
