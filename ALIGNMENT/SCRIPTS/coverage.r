@@ -56,14 +56,14 @@ coverage <- function(cov_file, run_name, save_dir){
   }
 
 
-for(d in dir()){
+#for(d in dir()){
   #cov_file <- read.table(args[1], col.names = c("chrom", "chromStart", "chromEnd", "name", "basePos", "depthAtPos"))
-  cov_file <- read.table(list.files(d, pattern = "\\.tsv$", full.names = TRUE),
+  cov_file <- read.table(list.files(pattern = "\\.tsv$", full.names = TRUE),
                          col.names = c("chrom", "chromStart", "chromEnd", "gene", "basePos", "depthAtPos")) %>%
     group_by(gene)
 
-  coverage(cov_file, args[1], d)
-  }
+  coverage(cov_file, args[1], getwd())
+  #}
 
 
 quit(save = "no")
