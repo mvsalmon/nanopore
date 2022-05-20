@@ -1,5 +1,6 @@
 #!/bin/#!/usr/bin/env bash
 #analysis of adaptive sampling adaptive_stats
+#TO DO: change from bedtools to mosdepth
 
 source /home/nanopore/miniconda3/etc/profile.d/conda.sh
 
@@ -40,14 +41,14 @@ while read bam_file; do
 done < bam_files.txt
 
 #calculate on target percentages (bedtools)
-mkdir ./COVERAGE
+mkdir ./ADAPTIVE_COVERAGE
 
 for f in *.sorted.bam; do
   #create directories for each adaptive decision
   decision=${f%%.bam*}
   mkdir ./COVERAGE/"$decision"
   #run bedtools to calculate coverage summary and per base depth of each feature in bed_file
-  bedtools coverage -a $bed_file -b $f -d > ./COVERAGE/"$decision"/"$decision"_per_base_depth.tsv
+  bedtools coverage -a $bed_file -b $f -d > ./ADAPTIVE_COVERAGE/"$decision"/"$decision"_per_base_depth.tsv
 done
 
 
@@ -60,9 +61,7 @@ done
 #descriptive stats from adaptive sampling
 Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r $adaptive_summary $run_name
 
-cd ./COVERAGE
+cd ./ADAPTIVE_COVERAGE
 
 #depth and coverage calculations on .tsv output from bedtools
-#TO Add:
-##output global depth and coverage
 Rscript $pipeline_dir/SCRIPTS/coverage.r *.tsv $run_name
