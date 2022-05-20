@@ -46,7 +46,7 @@ mkdir ./ADAPTIVE_COVERAGE
 for f in *.sorted.bam; do
   #create directories for each adaptive decision
   decision=${f%%.bam*}
-  mkdir ./COVERAGE/"$decision"
+  mkdir ./ADAPTIVE_COVERAGE/"$decision"
   #run bedtools to calculate coverage summary and per base depth of each feature in bed_file
   bedtools coverage -a $bed_file -b $f -d > ./ADAPTIVE_COVERAGE/"$decision"/"$decision"_per_base_depth.tsv
 done

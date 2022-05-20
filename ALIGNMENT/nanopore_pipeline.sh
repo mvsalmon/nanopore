@@ -5,7 +5,8 @@
 
 
 ##TO DO
-#ref genome variable
+#ref genome variable?
+#logging
 
 
 #Usage
@@ -22,16 +23,17 @@ helpFunction()
 }
 
 #parse arguments
-while getopts n:d:b:h opt; do
+while getopts n:d:b:a:h opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
     b) bed_file="$OPTARG";;
+    a) adaptive_summary="$OPTARG";;
     h) helpFunction;;
   esac
 done
 
-#Help if arguments are empty
+#Help if mandatory arguments are empty
 if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$bed_file" ]
 then
    echo "Some or all of the arguments are empty";
@@ -70,7 +72,7 @@ echo "INFO: Working directory $work_dir"
 #bascall from fast5 files in high accuracy mode
 #assumes no basecalling during run
 
-echo "Basecalling..."
+echo "INFO: Basecalling..."
 
 
 #pipe pass and fail fast5 files to guppy
@@ -93,7 +95,7 @@ cd $work_dir
 #-a: output SAM file
 #-x map-ont: nanopore mode (default)
 #using already generated minimap2 indexed reference *.mmi
-echo "Aligning..."
+echo "INFO: Aligning..."
 minimap2 -a -x map-ont \
 ~/tools/refgenome/seqs_for_alignment_pipelines/grch38/grch38.fasta.gz.mmi \
 ./fastq/"$run_name".fastq.gz > ./alignment/"$run_name".sam
@@ -116,7 +118,7 @@ cd ../
 source /home/nanopore/miniconda3/etc/profile.d/conda.sh
 conda activate pycoQC
 
-echo "Running pycoQC..."
+echo "INFO: Running pycoQC..."
 
 pycoQC \
 --summary_file ~/nanopore_runs/"$run_name"/fastq/all/sequencing_summary* \
@@ -130,15 +132,15 @@ conda activate
 ####### ADAPTIVE SAMPLING ##########
 #change to specify if adaptive when running command?
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
-#adaptive_summary=$(find $run_dir -name adaptive_sampling_*.csv -type f)
-if [ -n "$(find $run_dir -name adaptive_sampling_*.csv)" ]
+
+if [ -n "$adaptive_summary" ]
 then
-  echo "Adaptive sampling output detected. Processing adaptive sampling data..."
+  echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..."
 
 #run adaptive sampling analysis script
   bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d $pipeline_dir -n $run_name -s $adaptive_summary -b $bed_file
 else
-  echo "No adaptive sampling file detected."
+  echo "INFO: No adaptive sampling output detected."
 fi
 
 
@@ -161,9 +163,11 @@ bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$r
 bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
 
 samtools index "$run_name"_off_target.bam
+samtools index "$run_name"_on_target.bam
 
 #get distribution of read lengths
-samtools stats K562_SS_run3_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
+samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
+samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
 
 
 ##### CUTESV #####
