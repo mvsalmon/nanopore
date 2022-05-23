@@ -30,14 +30,15 @@ depth_plot <- function(depth_df, run_name = NULL, single_run = TRUE){
   return(plt)
 }
 
-#get read lenght frequencies
-off_target_len <- read_table("bedtools/off_target_len.txt", 
+#get read len frequencies
+off_target_len <- read_table("off_target_len.txt", 
                               col_names = c('len', 'freq'))
 
-on_target_len <- read_table("bedtools/on_target_len.txt", 
+on_target_len <- read_table("on_target_len.txt", 
                               col_names = c('len', 'freq'))
 #join
-read_lengths <- bind_rows(lst(on_target_len, off_target_len), .id = "location")
+read_lengths <- bind_rows(lst(on_target_len, off_target_len), .id = "location") %>%
+  group_by(location)
 
 #plot
 read_lengths %>% filter(len < 2000) %>%
@@ -46,3 +47,25 @@ ggplot( aes(x = len, y = freq, fill = location)) +
   theme(axis.text = element_text(size = 12, face = "bold")) +
   geom_col(alpha = 0.5, 
            position = 'identity') #avoids a stacked plot
+
+#% of on target reads above diff lengths for adaptive sampling
+#define read length thresholds
+threshold <- c(0, 250, 500, 750, 1000)
+
+#get total reads
+tot_reads <- sum(read_lengths$freq)
+
+for(t in threshold){
+  t_reads <- read_lengths %>% 
+    filter(len > t)
+   
+ on_reads <- filter(t_reads, location == "on_target_len")
+ n_on <- sum(on_reads$freq)
+
+ off_reads <- filter(t_reads, location == "off_target_len")
+ n_off <- sum(off_reads$freq)*100
+ 
+  fract_off <- n_off/n_on
+  print(sprintf("Percentage of reads of len >= %f off target: %f", t, fract_off))
+
+}
