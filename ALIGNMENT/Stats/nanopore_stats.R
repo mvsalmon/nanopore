@@ -10,25 +10,44 @@ read_mosdepth <- function(file_path){
   
 }
 #join
-K562_all <- bind_rows(lst(K562_run1, K562_run2, K562_run3), .id = "run")
+K562_all <- bind_rows(lst(K562_run1, K562_run2, K562_run3, K562_run4), .id = "run")
+
+K562_all$name <- str_replace(K562_all$name, "BCR_ABL1_BREAKPOINT", "ABL1 Upstream")
 #plot depth of k562 runs
 
-depth_plot <- function(depth_df, run_name = NULL, single_run = TRUE){
-  if(single_run){
-   fill_col <- NULL}
-  else{
-    fill_col <- "run"
-  }
-  
-  plt <- ggplot(depth_df, aes_(x = quote(name), y = quote(depth), fill = quote(fill_col))) + 
+depth_plot <- function(depth_df){
+
+  plt <- ggplot(depth_df, aes(x = name, y = depth, fill = run)) + 
   geom_col(position = "dodge") +
   scale_y_continuous(n.breaks = 10) + 
-  theme(axis.text.x = element_text(angle = 90, vjust = 1)) +
-  labs(title = sprintf("%s sequencing depth per target", run_name),
-       x = 'Gene', y = 'Depth')
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, 
+                                   face = 'italic', size = 10)) +
+  labs(x = 'Gene', y = 'Depth')
 
   return(plt)
 }
+
+#summary table of depth
+K562_depth_summary_table <- K562_all %>% 
+  pivot_wider(names_from = run, values_from = depth) %>%
+  rename("Run1" = "K562_run1",
+         "Run2" = "K562_run2",
+         "Run3" = "K562_run3",
+         "Run4" = "K562_run4",
+         "Gene" = "name") %>%
+  select(Gene:Run4) %>%
+  arrange(Gene)
+
+write.table(K562_depth_summary_table, file = "K562_depth_summary.tsv",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+#summary stats
+K562_all <- K562_all %>% group_by(run)
+
+K562_summary_stats <- K562_all %>%
+  summarise(mean_depth = mean(depth), median_depth = median(depth),
+            min_depth = min(depth), max_depth = max(depth))
 
 #get read len frequencies
 off_target_len <- read_table("off_target_len.txt", 
