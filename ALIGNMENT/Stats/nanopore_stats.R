@@ -1,6 +1,6 @@
 library(tidyverse)
 
-#import depth bed files
+#import mosdepth output *.regions.bed
 read_mosdepth <- function(file_path){
   
  depth_df <- read_table(file_path, 
@@ -13,6 +13,10 @@ read_mosdepth <- function(file_path){
 K562_all <- bind_rows(lst(K562_run1, K562_run2, K562_run3, K562_run4), .id = "run")
 
 K562_all$name <- str_replace(K562_all$name, "BCR_ABL1_BREAKPOINT", "ABL1 Upstream")
+
+#save combined data
+write.table(K562_all, "K562_all_runs_depth.tsv", sep = "\t", quote = F, row.names = F)
+
 #plot depth of k562 runs
 
 depth_plot <- function(depth_df){
@@ -60,10 +64,14 @@ read_lengths <- bind_rows(lst(on_target_len, off_target_len), .id = "location") 
   group_by(location)
 
 #plot
+
 read_lengths %>% filter(len < 2000) %>%
 ggplot( aes(x = len, y = freq, fill = location)) + 
-  labs(title = "K562 library 1 - adaptive sampling") +
-  theme(axis.text = element_text(size = 12, face = "bold")) +
+  labs(x = "Frequency", y = "Read Length",
+       fill = "") +
+  scale_fill_discrete(labels = c("Off Target", "On Target")) +
+  theme(axis.text = element_text(size = 12, face = "bold"),
+        text = element_text(size = 12, face = "bold")) +
   geom_col(alpha = 0.5, 
            position = 'identity') #avoids a stacked plot
 
