@@ -115,8 +115,8 @@ cd ../
 
 ######## QC ###############
 #source conda
-source /home/nanopore/miniconda3/etc/profile.d/conda.sh
-conda activate pycoQC
+#source /home/nanopore/miniconda3/etc/profile.d/conda.sh
+#conda activate pycoQC
 
 echo "INFO: Running pycoQC..."
 
@@ -126,7 +126,7 @@ pycoQC \
 --bam_file ~/nanopore_runs/"$run_name"/alignment/"$run_name".bam \
 --quiet
 
-conda activate
+#conda activate
 
 
 ####### ADAPTIVE SAMPLING ##########
@@ -175,7 +175,7 @@ cd "$work_dir"
 mkdir ./cuteSV && cd ./cuteSV
 
 #cuteSV for fusion gene detection
-conda activate cuteSV
+#conda activate cuteSV
 
 cuteSV ../alignment/"$run_name".bam \
 ~/tools/refgenome/seqs_for_alignment_pipelines/grch38/grch38.fa \
