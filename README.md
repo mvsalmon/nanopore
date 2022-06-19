@@ -1,5 +1,7 @@
 # nanopore
-Dependencies
+Pipeline for analysis and SV calling of targeted nanopore sequencing data.
+
+# Dependencies
 
 Guppy,
 minimap2,
