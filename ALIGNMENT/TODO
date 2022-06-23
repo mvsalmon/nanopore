@@ -1,2 +1,2 @@
 ## TO DO ##
-1. Remove multiple conda calls
+1. make high accuracy basecalling optional (but on by default)
