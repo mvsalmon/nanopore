@@ -2,13 +2,11 @@
 Pipeline for analysis and SV calling of targeted nanopore sequencing data.
 
 ## Usage 
-nanopore_pipeline.sh -n \<run name\> -d \<directory containing fast5 files\> -o \<output directory\> 
+nanopore_pipeline.sh -n \<run name\> -d \<directory containing fast5 files\> -b \<bed file describing targeted regions\> 
   
   optional arguments for adaptive sampling:
   
-  -b:  _bed file containing targeted regions_
-  
-  -a:  _adaptive sampling summary output file_
+   -a:  _adaptive sampling summary output file_
   
 
 ## Dependencies
