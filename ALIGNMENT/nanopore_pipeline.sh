@@ -17,8 +17,9 @@ helpFunction()
    echo ""
    echo "Usage: $0 -h display help -n run_name -d run_dir -o output_dir -b bed_file"
    echo -e "\t-n Name of Nanopore run"
-   echo -e "\t-d Directory containng Nanopore run data"
+   echo -e "\t-d Path to directory containing Nanopore run data"
    echo -e "\t-b BED file for adaptive sampling analysis" #make this optional
+   echo -e "\t-o Output directory path"
    exit 1 # Exit script after printing help
 }
 
