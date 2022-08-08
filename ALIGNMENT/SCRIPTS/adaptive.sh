@@ -18,7 +18,6 @@ done
 mkdir ./adaptive_stats
 cd ./adaptive_stats
 
-#conda activate adaptiveStats
 
 #create bam files containg read ids for each adaptive sampling decision
 echo "Subseting bam file..."
@@ -28,8 +27,6 @@ echo "Subseting bam file..."
 python $pipeline_dir/SCRIPTS/extract_reads_adaptive.py --bam ../alignment/"$run_name".bam \
 --adaptive_output $adaptive_summary \
 --out "$run_name".bam
-
-#conda activate
 
 #get list of bam files from last step
 ls *.bam > bam_files.txt
