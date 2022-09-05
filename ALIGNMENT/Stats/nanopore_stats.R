@@ -67,7 +67,7 @@ read_lengths <- bind_rows(lst(on_target_len, off_target_len), .id = "location") 
 
 read_lengths %>% filter(len < 2000) %>%
 ggplot( aes(x = len, y = freq, fill = location)) + 
-  labs(x = "Frequency", y = "Read Length",
+  labs(y = "Frequency", x = "Read Length",
        fill = "") +
   scale_fill_discrete(labels = c("Off Target", "On Target")) +
   theme(axis.text = element_text(size = 12, face = "bold"),

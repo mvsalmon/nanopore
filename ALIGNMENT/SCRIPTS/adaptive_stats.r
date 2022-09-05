@@ -5,7 +5,7 @@ require(tidyverse)
 #2 run name
 
 
-args = commandArgs(trailingOnly = TRUE)
+args <- commandArgs(trailingOnly = TRUE)
 
 
 # Adaptive Stats function -------------------------------------------------
