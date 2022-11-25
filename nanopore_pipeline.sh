@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #commands used when processing fastqfile data, following epi2me guides
-#run from SCRIPTS dir
 
 
 ##TO DO
@@ -134,7 +133,7 @@ then
   echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..."
 
 #run adaptive sampling analysis script
-  bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d $pipeline_dir -n $run_name -s $adaptive_summary -b $bed_file
+  bash "$pipeline_dir"/ALIGNMENT/SCRIPTS/adaptive.sh -d $pipeline_dir -n $run_name -s $adaptive_summary -b $bed_file
 else
   echo "INFO: No adaptive sampling output detected."
 fi
