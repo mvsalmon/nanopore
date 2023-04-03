@@ -14,6 +14,7 @@ while getopts d:n:s:b: flag; do
   esac
 done
 
+work_dir=$(pwd)
 
 mkdir ./adaptive_stats
 cd ./adaptive_stats
@@ -24,8 +25,9 @@ echo "Subseting bam file..."
 # -b bam file
 # -a adaptive sequencing summary file
 #
-python $pipeline_dir/SCRIPTS/extract_reads_adaptive.py --bam ../alignment/"$run_name".bam \
---adaptive_output $adaptive_summary \
+python3 $pipeline_dir/SCRIPTS/extract_reads_adaptive.py \
+--bam "$work_dir"/alignment/"$run_name".bam \
+--adaptive_output "$work_dir"/"$adaptive_summary" \
 --out "$run_name".bam
 
 #get list of bam files from last step
@@ -56,7 +58,7 @@ done
 
 
 #descriptive stats from adaptive sampling
-Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r $adaptive_summary $run_name
+Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r "$work_dir"/"$adaptive_summary" $run_name
 
 cd ./ADAPTIVE_COVERAGE
 
