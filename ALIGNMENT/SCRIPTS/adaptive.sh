@@ -5,16 +5,16 @@
 #source /home/nanopore/miniconda3/etc/profile.d/conda.sh
 
 #parse arguments
-while getopts d:n:s:b: flag; do
+while getopts d:n:s:b:w: flag; do
   case "${flag}" in
     d) pipeline_dir="${OPTARG}";;
     n) run_name="${OPTARG}";;
     s) adaptive_summary="${OPTARG}";;
     b) bed_file="${OPTARG}";;
+    w) work_dir="${OPTARG}";;
   esac
 done
 
-work_dir=$(pwd)
 
 mkdir ./adaptive_stats
 cd ./adaptive_stats
@@ -63,4 +63,5 @@ Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r "$work_dir"/"$adaptive_summary" $
 cd ./ADAPTIVE_COVERAGE
 
 #depth and coverage calculations on .tsv output from bedtools
-Rscript $pipeline_dir/SCRIPTS/coverage.r *.tsv $run_name
+#T
+Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name
