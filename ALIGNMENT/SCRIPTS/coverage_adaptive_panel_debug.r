@@ -1,6 +1,6 @@
 library(tidyverse)
 
-args = commandArgs(trailingOnly = TRUE)
+args = c("E16023_combined")
 #1) run name
 
 # Coverage Function -------------------------------------------------------
@@ -33,7 +33,7 @@ coverage <- function(cov_file, run_name, save_dir){
     mutate(fractionalCoverage = coveredBases/featureLength) %>%
     #separate gene name and RefSeq accession
     separate(gene, into = c('gene', 'RefSeq'), sep = ',') #%>%
-    #output table with per-target depth and coverage info
+    #output tablhttp://127.0.0.1:30185/graphics/plot_zoom_png?width=1200&height=900e with per-target depth and coverage info
     # write_delim(sprintf("%s_coverage_data.tsv", run_name),
     #             delim = "\t",
     #             quote = "none")
@@ -45,14 +45,15 @@ coverage <- function(cov_file, run_name, save_dir){
     geom_bar(stat = 'identity') +
     labs(title = sprintf("%s mean depth", run_name),
          y = 'Mean Depth') +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+    theme(axis.text.x = element_text(size = 4)) +
+    scale_x_discrete(guide = guide_axis(n.dodge = 3, angle = 45))
 
   ggsave(sprintf("%s_depth_plot.pdf", run_name), depth_plot, path = save_dir)
 
   #plot fractional coverage per target
   coverage_plot <- ggplot(depth_table, aes(x = gene, y = fractionalCoverage)) +
     geom_bar(stat = 'identity') +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 2)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5, size = 4)) +
     labs(title = sprintf("%s target fractional coverage", run_name),
          y = 'Coverage')
     
