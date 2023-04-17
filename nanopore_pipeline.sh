@@ -18,7 +18,7 @@ helpFunction()
    echo -e "\t-n Name of Nanopore run"
    echo -e "\t-d Path to directory containing Nanopore run data"
    echo -e "\t-b BED file for adaptive sampling analysis" #make this optional
-   echo -e "\t-o Output directory path"
+   #TODO echo -e "\t-o Output directory path"
    exit 1 # Exit script after printing help
 }
 
@@ -64,9 +64,10 @@ pipeline_dir=$(pwd)
 work_dir=~/nanopore_runs/"$run_name"
 
 echo "INFO: Working directory $work_dir"
+cd $work_dir
 
 #merge fastq files to analysis dirs
-#cat "$run_dir"/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
+cat "$run_dir"/fastq_pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
 
 ####### BASECALLING ########
 #bascall from fast5 files in high accuracy mode
@@ -85,11 +86,10 @@ ls "$run_dir"/fast5*/*.fast5 | \
 --gpu_runners_per_device 2 \
 --compress_fastq
 
-#merge fastq
+# #merge fastq
 cat "$work_dir"/fastq/all/pass/*.gz > ~/nanopore_runs/"$run_name"/fastq/"$run_name".fastq.gz
 
 ####### ALIGNMENT ##########
-cd $work_dir
 
 #align merged fastq to grch38 reference with minimap2
 #-a: output SAM file
@@ -98,29 +98,27 @@ cd $work_dir
 echo "INFO: Aligning..."
 minimap2 -a -x map-ont \
 ~/tools/refgenome/seqs_for_alignment_pipelines/grch38/grch38.fasta.gz.mmi \
-./fastq/"$run_name".fastq.gz > ./alignment/"$run_name".sam
+"$work_dir"/fastq/"$run_name".fastq.gz > "$work_dir"/alignment/"$run_name".sam
 
-cd ./alignment
 
 #use samtools to convert to bam file and sort by position
-samtools sort -o "$run_name".bam "$run_name".sam
+samtools sort -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment"$run_name".sam
 
 #index sorted bam file
-samtools index "$run_name".bam
+samtools index "$work_dir"/alignment/"$run_name".bam
 
 #save stats
-samtools flagstat "$run_name".bam > "$run_name"_flagstat.txt
+samtools flagstat "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
 
-cd ../
 
 ######## QC ###############
 
 echo "INFO: Running pycoQC..."
 
 pycoQC \
---summary_file ~/nanopore_runs/"$run_name"/fastq/all/sequencing_summary* \
---html_outfile ~/nanopore_runs/"$run_name"/pycoQC/"$run_name"_pycoQC.html \
---bam_file ~/nanopore_runs/"$run_name"/alignment/"$run_name".bam \
+--summary_file "$work_dir"/fastq/all/sequencing_summary* \
+--html_outfile "$work_dir"/pycoQC/"$run_name"_pycoQC.html \
+--bam_file "$work_dir"/alignment/"$run_name".bam \
 --quiet
 
 
@@ -140,12 +138,12 @@ fi
 
 
 ###### COVERAGE #####
-cd "$work_dir"/coverage/
 
-mkdir ./mosdepth
-mkdir ./bedtools
 
-cd ./mosdepth
+mkdir "$work_dir"/coverage/mosdepth
+mkdir "$work_dir"/coverage/bedtools
+
+cd "$work_dir"/coverage/mosdepth
 #use mosdepth to generate depth
 mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
 
@@ -164,16 +162,18 @@ samtools index "$run_name"_on_target.bam
 samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
 samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
 
-
-##### CUTESV #####
 cd "$work_dir"
+##### CUTESV #####
+
 mkdir ./cuteSV && cd ./cuteSV
 
 #cuteSV for fusion gene detection
 
-cuteSV ../alignment/"$run_name".bam \
+cuteSV "$work_dir"/alignment/"$run_name".bam \
 ~/tools/refgenome/seqs_for_alignment_pipelines/grch38/grch38.fa \
 "$run_name".vcf \
 ./ \
 --max_cluster_bias_DEL 100 \
 --diff_ratio_merging_DEL 0.3
+#no uppper limit on SV size
+--max_size -1
