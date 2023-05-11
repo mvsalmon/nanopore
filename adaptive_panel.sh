@@ -21,7 +21,8 @@ helpFunction()
 }
 
 #parse arguments
-while getopts n:d:b:a:o:r:s:m:q:h opt; do
+#TODO change this from getopts
+while getopts n:d:b:a:o:r:s:m:q:v:h opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
@@ -33,6 +34,7 @@ while getopts n:d:b:a:o:r:s:m:q:h opt; do
     s) skip_basecalling="$OPTARG";;
     m) skip_alignment="$OPTARG";;
     q) skip_qc="$OPTARG";;
+    v) skip_SV="$OPTARG";;
     h) helpFunction;;
   esac
 done
@@ -162,26 +164,31 @@ NanoPlot \
 fi
 
 ##### SV CALLING #####
-
+if [ -z $skip_SV ]
+then
 #cuteSV
-mkdir "$output_dir"/CuteSV
+mkdir "$work_dir"/CuteSV
 
 #cuteSV for fusion gene detection
 #TODO make path to ref genome a variable
 
 cuteSV "$work_dir"/alignment/"$run_name".bam \
 ~/Tools/ref_genome/grch38/grch38.fa \
-"$output_dir"/CuteSV/"$run_name"_cuteSV.vcf \
+"$work_dir"/CuteSV/"$run_name"_cuteSV.vcf \
 ./ \
 --max_cluster_bias_DEL 100 \
 --diff_ratio_merging_DEL 0.3 \
 --max_size -1 #no uppper limit on SV size 
 
 #Sniffles
-mkdir "$output_dir"/Sniffles
+mkdir "$work_dir"/Sniffles
+cd "$work_dir"/Sniffles
 
 sniffles --input "$work_dir"/alignment/"$run_name".bam \
---vcf "$output_dir"/Sniffles/"$run_name"_sniffles.vcf
+--vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf
+
+cd "$pipeline_dir"
+fi
 
 ####### ADAPTIVE SAMPLING ##########
 #change to specify if adaptive when running command?
