@@ -16,8 +16,8 @@ while getopts d:n:s:b:w: flag; do
 done
 
 
-mkdir ./adaptive_stats
-cd ./adaptive_stats
+mkdir "$work_dir"/adaptive_stats
+cd "$work_dir"/adaptive_stats
 
 
 #create bam files containg read ids for each adaptive sampling decision
@@ -27,7 +27,7 @@ echo "Subseting bam file..."
 #
 python3 $pipeline_dir/SCRIPTS/extract_reads_adaptive.py \
 --bam "$work_dir"/alignment/"$run_name".bam \
---adaptive_output "$work_dir"/"$adaptive_summary" \
+--adaptive_output "$adaptive_summary" \
 --out "$run_name".bam
 
 #get list of bam files from last step
@@ -35,7 +35,7 @@ ls *.bam > bam_files.txt
 
 #index subsetted files
 while read bam_file; do
-  samtools sort -o $bam_file.sorted.bam $bam_file
+  samtools sort -@ 20 -o $bam_file.sorted.bam $bam_file
   samtools index $bam_file.sorted.bam
 done < bam_files.txt
 
@@ -58,7 +58,7 @@ done
 
 
 #descriptive stats from adaptive sampling
-Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r "$work_dir"/"$adaptive_summary" $run_name
+Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r "$adaptive_summary" $run_name
 
 cd ./ADAPTIVE_COVERAGE
 

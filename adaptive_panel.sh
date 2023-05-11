@@ -62,18 +62,20 @@ fi
 #####MAIN######
 
 #create analysis dirs
-echo "INFO: Output Directory: $output_dir/$run_name"
-
-mkdir -p "$output_dir"/"$run_name"/alignment
-mkdir -p "$output_dir"/"$run_name"/fastq/all
-mkdir -p "$output_dir"/"$run_name"/NanoPlot
-mkdir -p "$output_dir"/"$run_name"/pycoQC
-mkdir -p "$output_dir"/"$run_name"/coverage/mosdepth
-mkdir -p "$output_dir"/"$run_name"/coverage/bedtools
-
 #dir variables
 pipeline_dir=$(pwd)
 work_dir="$output_dir"/"$run_name"
+
+echo "INFO: Output Directory: $work_dir"
+
+mkdir -p "$work_dir"/alignment
+mkdir -p "$work_dir"/fastq/all
+mkdir -p "$work_dir"/NanoPlot
+mkdir -p "$work_dir"/pycoQC
+mkdir -p "$work_dir"/coverage/mosdepth
+mkdir -p "$work_dir"/coverage/bedtools
+
+
 
 
 ####### BASECALLING ########
@@ -118,11 +120,11 @@ echo "INFO: Aligning..."
 -x map-ont \
 "$ref_index" \
 "$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz \
- -t 20 > "$output_dir"/"$run_name"/alignment/"$run_name".sam
+-t 20 > "$output_dir"/"$run_name"/alignment/"$run_name".sam
 
 #use samtools to convert to bam file and sort by position
 samtools sort \
--o "$output_dir"/"$run_name"/alignment/"$run_name".bam "$output_dir"/"$run_name"/alignment/"$run_name".sam
+-@ 20 -o "$output_dir"/"$run_name"/alignment/"$run_name".bam "$output_dir"/"$run_name"/alignment/"$run_name".sam
 
 #index sorted bam file
 samtools index "$output_dir"/"$run_name"/alignment/"$run_name".bam
@@ -207,9 +209,9 @@ then
 
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
-  bash "$pipeline_dir"/ALIGNMENT/SCRIPTS/adaptive.sh -d $pipeline_dir \
+  bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d $pipeline_dir \
   -n $run_name \
-  -s "$run_name"_combined_adaptive_sampling_summary.csv \
+  -s "$adaptive_summary" \
   -b $bed_file \
   -w "$work_dir"
 else
@@ -217,7 +219,7 @@ else
 fi
 
 ###### COVERAGE #####
-cd "$work_dir"/coverage/mosepth 
+cd "$work_dir"/coverage/mosdepth 
 
 #use mosdepth to calculate depth
 mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam

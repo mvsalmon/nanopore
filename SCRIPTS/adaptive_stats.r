@@ -1,12 +1,12 @@
 require(tidyverse)
 
 #load arguments
-#1 adaptive sampling summary fastqfile
+#1 adaptive sampling summary file
 #2 run name
-
-
 args <- commandArgs(trailingOnly = TRUE)
 
+sprintf("INPUT FILE: %s", args[1])
+sprintf("RUN NAME: %s", args[2])
 
 # Adaptive Stats function -------------------------------------------------
 
@@ -38,6 +38,7 @@ adaptive_stats <- function(adaptive_seq, run_name){
   ggsave(sprintf("%s_adaptive_stats.pdf", run_name), read_count_plot)
   }
 
-adaptive_stats(read.csv(args[1]), args[2])
+summary_file <- read.csv(args[1])
+adaptive_stats(summary_file, args[2])
 
 quit(save = "no")
