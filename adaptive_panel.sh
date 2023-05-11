@@ -22,7 +22,7 @@ helpFunction()
 
 #parse arguments
 #TODO change this from getopts
-while getopts n:d:b:a:o:r:s:m:q:v:h opt; do
+while getopts n:d:b:a:o:r:s:m:q:v:p:h opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
@@ -35,6 +35,7 @@ while getopts n:d:b:a:o:r:s:m:q:v:h opt; do
     m) skip_alignment="$OPTARG";;
     q) skip_qc="$OPTARG";;
     v) skip_SV="$OPTARG";;
+    p) skip_adaptive="$OPTARG";;
     h) helpFunction;;
   esac
 done
@@ -196,7 +197,7 @@ fi
 #change to specify if adaptive when running command?
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
 
-if [ -n "$adaptive_summary" ]
+if [ -n "$adaptive_summary" ] && [ -z $skip_adaptive ]
 then
   echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..."
 
@@ -239,4 +240,5 @@ samtools index "$run_name"_on_target.bam
 samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
 samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
 
-
+#depth and coverage calculations on .tsv output from bedtools
+Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name

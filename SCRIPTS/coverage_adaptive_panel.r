@@ -86,11 +86,11 @@ coverage <- function(cov_file, run_name, save_dir){
   cov_file <- read_delim(list.files(pattern = "\\.tsv$", full.names = TRUE),
                         delim = "\t",
                         col_names = c("chrom", "chromStart", "chromEnd", "gene", "score", "strand", "basePos", "depthAtPos")
-                        ) %>%
+                        ) #%>%
     #grouping by chrom accounts for PAR1 on X/Y where no mapping to Y makes a 
     #few genes in this region appear to only have half the depth/coverage
     #chrom group gives a row for each gene on X and Y
-    group_by(gene, chrom)
+    #group_by(gene, chrom)
 
   coverage(cov_file, args[1], getwd())
 
