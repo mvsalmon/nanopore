@@ -62,7 +62,7 @@ coverage <- function(cov_file, run_name, save_dir){
   #plot depth per target
   depth_plot <- ggplot(depth_table, aes(x = gene, y = medianDepth)) +
     geom_bar(stat = 'identity') +
-    labs(title = sprintf("%s mean depth", run_name),
+    labs(title = sprintf("%s median depth", run_name),
          y = 'Median Depth') +
     theme(axis.text.x = element_text(size = 4)) +
     scale_x_discrete(guide = guide_axis(n.dodge = 3, angle = 45))

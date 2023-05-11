@@ -102,7 +102,7 @@ minimap2 -a -x map-ont \
 
 
 #use samtools to convert to bam file and sort by position
-samtools sort -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment"$run_name".sam
+samtools sort -o -@ 20 "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment"$run_name".sam
 
 #index sorted bam file
 samtools index "$work_dir"/alignment/"$run_name".bam
@@ -174,6 +174,5 @@ cuteSV "$work_dir"/alignment/"$run_name".bam \
 "$run_name".vcf \
 ./ \
 --max_cluster_bias_DEL 100 \
---diff_ratio_merging_DEL 0.3
-#no uppper limit on SV size
---max_size -1
+--diff_ratio_merging_DEL 0.3 \
+--max_size -1 #no uppper limit on SV size 

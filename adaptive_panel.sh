@@ -10,11 +10,13 @@ helpFunction()
    echo "Pipeline for analysis of Nanopore runs."
    echo ""
    echo "Usage: $0 -h display help -n run_name -d run_dir -o output_dir -b bed_file"
+   echo "Required arguments:"
    echo -e "\t-n Name of Nanopore run"
    echo -e "\t-d Path to directory containing Nanopore run data. Should be the experiment level directory if several runs need to be analysed together."
    echo -e "\t-b BED file for adaptive sampling analysis" 
    echo -e "\t-o Output directory path"
    echo -e "\t-r Path to reference genome mmi index"
+   echo -e "\t-a Path to adaptive sampling summary file"
    exit 1 # Exit script after printing help
 }
 
@@ -37,9 +39,10 @@ done
 
 #Help if mandatory arguments are empty
 if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
-   [ -z "$ref_index" ] || [ -z "$bed_file" ]
+   [ -z "$ref_index" ] || [ -z "$bed_file" ] || [ -z "$adaptive_summary" ]
 then
-   echo "Some or all of the required arguments are empty";
+   echo ""
+   echo "ERROR: Missing one or more required arguments. See help message below.";
    helpFunction
 fi
 
@@ -83,12 +86,11 @@ guppy_basecaller \
 --recursive \
 --save_path "$output_dir"/"$run_name"/fastq/all \
 --device cuda:0 \
---config dna_r10.4.1_e8.2_400bps_hac.cfg \
+--config dna_r10.4.1_e8.2_400bps_sup.cfg \
 --compress_fastq \
---chunks_per_runner 1400 \
---gpu_runners_per_device 32
-
-
+--chunks_per_runner 208 \
+--gpu_runners_per_device 12 \
+--num_callers 4
 
 #merge fastq
 cat "$output_dir"/"$run_name"/fastq/all/pass/*.fastq.gz > \
@@ -116,7 +118,6 @@ echo "INFO: Aligning..."
 "$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz \
  -t 20 > "$output_dir"/"$run_name"/alignment/"$run_name".sam
 
-
 #use samtools to convert to bam file and sort by position
 samtools sort \
 -o "$output_dir"/"$run_name"/alignment/"$run_name".bam "$output_dir"/"$run_name"/alignment/"$run_name".sam
@@ -128,6 +129,7 @@ samtools index "$output_dir"/"$run_name"/alignment/"$run_name".bam
 samtools flagstat \
 "$output_dir"/"$run_name"/alignment/"$run_name".bam > "$output_dir"/"$run_name"/alignment/"$run_name"_flagstat.txt
 fi
+
 ######### QC ###############
 if [ -z "$skip_qc" ]
 then
@@ -151,13 +153,35 @@ NanoPlot \
 #plots of alignment using bam file
 NanoPlot \
 --bam "$output_dir"/"$run_name"/alignment/"$run_name".bam \
---outdir "$output_dir"/"$run_name"/Nanoplot/bam
+--outdir "$output_dir"/"$run_name"/Nanoplot/bam \
 --loglength \
 --N50 \
---prefix "$run_name"
---threads 20
+--prefix "$run_name" \
+--threads 20 \
 --alength # Use aligned read length not sequence read length
 fi
+
+##### SV CALLING #####
+
+#cuteSV
+mkdir "$output_dir"/CuteSV
+
+#cuteSV for fusion gene detection
+#TODO make path to ref genome a variable
+
+cuteSV "$work_dir"/alignment/"$run_name".bam \
+~/Tools/ref_genome/grch38/grch38.fa \
+"$output_dir"/CuteSV/"$run_name"_cuteSV.vcf \
+./ \
+--max_cluster_bias_DEL 100 \
+--diff_ratio_merging_DEL 0.3 \
+--max_size -1 #no uppper limit on SV size 
+
+#Sniffles
+mkdir "$output_dir"/Sniffles
+
+sniffles --input "$work_dir"/alignment/"$run_name".bam \
+--vcf "$output_dir"/Sniffles/"$run_name"_sniffles.vcf
 
 ####### ADAPTIVE SAMPLING ##########
 #change to specify if adaptive when running command?
@@ -169,10 +193,10 @@ then
 
 #combine adaptive sampling summary files
 #find all adaptive sampling summary files and store in an array
-mapfile -d '' adaptive_files < <(find "$run_dir" 'adaptive*' -print0)
+#mapfile -d '' adaptive_files < <(find "$run_dir" -name 'adaptive_sampling*' -print0)
 #slice the array to get the header only once in the output file
-{ cat ${adaptive_files[@]:0:1}; grep -v "^batch_time" ${array[@]:1}; } > \
-"$run_name"_combined_adaptive_sampling_summary.csv
+#{ cat ${adaptive_files[@]:0:1}; grep -v "^batch_time" ${array[@]:1}; } > \
+#"$run_name"_combined_adaptive_sampling_summary.csv
 
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
