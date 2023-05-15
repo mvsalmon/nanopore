@@ -231,6 +231,7 @@ cd ../bedtools
 #on target
 bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
 #off target with -v
+#might cut this out - doesn't seem that necessary
 bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
 
 samtools index "$run_name"_off_target.bam

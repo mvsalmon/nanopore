@@ -16,7 +16,7 @@ while getopts d:n:s:b:w: flag; do
 done
 
 
-mkdir "$work_dir"/adaptive_stats
+mkdir -p "$work_dir"/adaptive_stats/adaptive_coverage
 cd "$work_dir"/adaptive_stats
 
 
@@ -40,14 +40,14 @@ while read bam_file; do
 done < bam_files.txt
 
 #calculate on target percentages (bedtools)
-mkdir ./ADAPTIVE_COVERAGE
+#mkdir ./ADAPTIVE_COVERAGE
 
 for f in *.sorted.bam; do
   #create directories for each adaptive decision
   decision=${f%%.bam*}
-  mkdir ./ADAPTIVE_COVERAGE/"$decision"
+  mkdir ./adaptive_coverage/"$decision"
   #run bedtools to calculate coverage summary and per base depth of each feature in bed_file
-  bedtools coverage -a $bed_file -b $f -d > ./ADAPTIVE_COVERAGE/"$decision"/"$decision"_per_base_depth.tsv
+  bedtools coverage -a $bed_file -b $f -d > ./adaptive_coverage/"$decision"/"$decision"_per_base_depth.tsv
 done
 
 

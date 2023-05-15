@@ -102,7 +102,7 @@ minimap2 -a -x map-ont \
 
 
 #use samtools to convert to bam file and sort by position
-samtools sort -o -@ 20 "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment"$run_name".sam
+samtools sort -@ 20 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment"$run_name".sam
 
 #index sorted bam file
 samtools index "$work_dir"/alignment/"$run_name".bam
