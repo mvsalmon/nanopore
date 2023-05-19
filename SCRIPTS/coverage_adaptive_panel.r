@@ -1,14 +1,14 @@
 library(tidyverse)
 
 args = commandArgs(trailingOnly = TRUE)
-#args = list(list.files("adaptive_coverage/stop_receiving_230509_E16023_combined_panel/",
-            # pattern = "\\.tsv", full.names = TRUE),
-            # "23059_E16023_combined_panel",
-            # "adaptive_coverage/stop_receiving_230509_E16023_combined_panel/")
+# args = list(list.files("adaptive_coverage/stop_receiving_230509_E16023_combined_panel/",
+#             pattern = "\\.tsv", full.names = TRUE),
+#             "23059_E16023_combined_panel",
+#             "adaptive_coverage/stop_receiving_230509_E16023_combined_panel/")
 
 
-#1) run name
-#2) bedtools .tsv coverage output file
+#1) bedtools .tsv coverage output file
+#2) run name
 #3) output directory
 
 # Coverage Function -------------------------------------------------------
@@ -91,16 +91,17 @@ coverage <- function(cov_file, run_name, save_dir){
 
 #for(d in dir()){
   #cov_file <- read.table(args[1], col.names = c("chrom", "chromStart", "chromEnd", "name", "basePos", "depthAtPos"))
-  cov_file <- read_delim(args[1],
+  cov_file <- read_delim(args[[1]],
                         delim = "\t",
                         col_names = c("chrom", "chromStart", "chromEnd", "gene",
-                                      "score", "strand", "basePos", "depthAtPos")) %>%
+                                      "score", "strand", "basePos", 
+                                      "depthAtPos")) %>%
     #grouping by chrom accounts for PAR1 on X/Y where no mapping to Y makes a 
     #few genes in this region appear to only have half the depth/coverage
-    #this may be a useful internal control but to change, then add chrom to 
-    #group_by to give a row for each gene on X and Y
+    #chrom group gives a row for each gene on X and Y - may be useful to keep
+    #as internal control?
     group_by(gene)
 
-  coverage(cov_file, args[2], args[3])
+  coverage(cov_file, args[[2]], args[[3]])
 
 quit(save = "no")

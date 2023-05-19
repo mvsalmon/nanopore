@@ -60,8 +60,8 @@ done
 #descriptive stats from adaptive sampling
 Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r "$adaptive_summary" $run_name
 
-cd ./ADAPTIVE_COVERAGE
+#cd ./ADAPTIVE_COVERAGE
 
 #depth and coverage calculations on .tsv output from bedtools
-#T
-Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name
+
+Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r ./adaptive_coverage/stop_receiving_"$run_name"/stop_receiving_"$run_name".tsv "$run_name" ./
