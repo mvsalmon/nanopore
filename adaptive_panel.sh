@@ -80,20 +80,21 @@ mkdir -p "$work_dir"/coverage/bedtools
 
 
 ####### BASECALLING ########
-#bascall from pod5 files in SUP mode
+#bascall from pod5 files in SUP mode with 5mc modification
 
 if [ -z "$skip_basecalling" ] 
 then
 echo "INFO: Basecalling..."
 
+#TODO handle errors
 guppy_basecaller \
 --input_path "$run_dir" \
 --recursive \
 --save_path "$output_dir"/"$run_name"/fastq/all \
 --device cuda:0 \
---config dna_r10.4.1_e8.2_400bps_sup.cfg \
+--config dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_sup.cfg \
 --compress_fastq \
---chunks_per_runner 208 \
+--chunks_per_runner 350 \
 --gpu_runners_per_device 12 \
 --num_callers 4
 
@@ -169,6 +170,7 @@ fi
 ##### SV CALLING #####
 if [ -z $skip_SV ]
 then
+echo "INFO: Calling SVs"
 #cuteSV
 mkdir "$work_dir"/CuteSV
 
@@ -190,7 +192,7 @@ cd "$work_dir"/Sniffles
 sniffles --input "$work_dir"/alignment/"$run_name".bam \
 --vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf
 
-cd "$pipeline_dir"
+#cd "$pipeline_dir"
 fi
 
 ####### ADAPTIVE SAMPLING ##########
@@ -200,19 +202,23 @@ fi
 if [ -n "$adaptive_summary" ] && [ -z $skip_adaptive ]
 then
   echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..."
-
+  echo "INFO: Combining adaptive summary files"
 #combine adaptive sampling summary files
-#find all adaptive sampling summary files and store in an array
-#mapfile -d '' adaptive_files < <(find "$run_dir" -name 'adaptive_sampling*' -print0)
-#slice the array to get the header only once in the output file
-#{ cat ${adaptive_files[@]:0:1}; grep -v "^batch_time" ${array[@]:1}; } > \
-#"$run_name"_combined_adaptive_sampling_summary.csv
+#find all adaptive sampling summary files
+#TODO check this works with a single file..
+adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
+#concatenate adaptive summary files with a single header
+awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
+     1 {print}' $adaptive_files > "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
+#adaptive_summary="$run_name"_combined_adaptive_sampling_summary.csv
+
+echo "INFO: Subsetting bam files"
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
   bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d $pipeline_dir \
   -n $run_name \
-  -s "$adaptive_summary" \
+  -s "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
   -b $bed_file \
   -w "$work_dir"
 else
@@ -220,6 +226,8 @@ else
 fi
 
 ###### COVERAGE #####
+echo "INFO: Calculating coverage"
+
 cd "$work_dir"/coverage/mosdepth 
 
 #use mosdepth to calculate depth
