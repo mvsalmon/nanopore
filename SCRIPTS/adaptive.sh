@@ -21,7 +21,8 @@ cd "$work_dir"/adaptive_stats
 
 
 #create bam files containg read ids for each adaptive sampling decision
-echo "Subseting bam file..."
+echo $(date)
+echo "INFO: Subseting bam file..."
 # -b bam file
 # -a adaptive sequencing summary file
 #
@@ -56,7 +57,8 @@ done
 ##per gene coverage
 ##depth calculations
 
-
+echo $(date)
+echo "INFO: Running descriptive statistics..."
 #descriptive stats from adaptive sampling
 Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r "$adaptive_summary" $run_name
 

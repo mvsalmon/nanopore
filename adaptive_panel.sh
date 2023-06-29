@@ -54,6 +54,7 @@ if [[ "$pid" =~ ^[0-9]+$ ]]; then
   exit 1
   #kill -9 $pid
  else
+   >&2 echo $(date)
    >&2 echo "INFO: No previous Guppy detected, running new analysis..."
 fi
 
@@ -63,7 +64,7 @@ fi
 #dir variables
 pipeline_dir=$(pwd)
 work_dir="$output_dir"/"$run_name"
-
+echo $(date)
 echo "INFO: Output Directory: $work_dir"
 
 mkdir -p "$work_dir"/alignment
@@ -78,6 +79,7 @@ mkdir -p "$work_dir"/coverage/bedtools
 
 if [ -z "$skip_basecalling" ] 
 then
+echo $(date)
 echo "INFO: Basecalling..."
 
 #TODO handle errors
@@ -104,6 +106,7 @@ fi
 
 if [ -z "$skip_alignment" ]
 then
+echo $(date)
 echo "INFO: Aligning..."
 
 #align merged fastq to grch38 reference with minimap2
@@ -133,14 +136,17 @@ fi
 ##QC ##
 if [ -z "$skip_qc" ]
 then
+echo $(date)
 echo "INFO: Creating summary plots"
 
+echo "INFO: PycoQC..."
 pycoQC \
 --summary_file "$output_dir"/"$run_name"/fastq/all/sequencing_summary* \
 --html_outfile "$output_dir"/"$run_name"/pycoQC/"$run_name"_pycoQC.html \
 --bam_file "$output_dir"/"$run_name"/alignment/"$run_name".bam \
 --quiet
 
+echo "INFO: NanoPlot..."
 #plots of run using sequencing summary
 NanoPlot \
 --summary "$run_dir"/sequencing_summary* \
@@ -164,6 +170,7 @@ fi
 ##SV CALLING ##
 if [ -z $skip_SV ]
 then
+echo $(date)
 echo "INFO: Calling SVs"
 #cuteSV
 mkdir "$work_dir"/CuteSV
@@ -193,7 +200,7 @@ fi
 ##ADAPTIVE SAMPLING ##
 #change to specify if adaptive when running command?
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
-
+echo $(date)
 if [ -n "$adaptive_summary" ] && [ -z $skip_adaptive ]
 then
   echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..."
@@ -208,19 +215,19 @@ awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
 
 #adaptive_summary="$run_name"_combined_adaptive_sampling_summary.csv
 
-echo "INFO: Subsetting bam files"
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
-  bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d $pipeline_dir \
-  -n $run_name \
+  bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
+  -n "$run_name" \
   -s "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
-  -b $bed_file \
+  -b "$bed_file" \
   -w "$work_dir"
 else
   echo "INFO: No adaptive sampling output detected."
 fi
 
 ## COVERAGE ##
+echo $(date)
 echo "INFO: Calculating coverage"
 
 cd "$work_dir"/coverage/mosdepth 
