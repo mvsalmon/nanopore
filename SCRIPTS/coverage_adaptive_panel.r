@@ -1,11 +1,6 @@
 library(tidyverse)
 
 args = commandArgs(trailingOnly = TRUE)
-# args = list(list.files("adaptive_coverage/stop_receiving_230509_E16023_combined_panel/",
-#             pattern = "\\.tsv", full.names = TRUE),
-#             "23059_E16023_combined_panel",
-#             "adaptive_coverage/stop_receiving_230509_E16023_combined_panel/")
-
 
 #1) bedtools .tsv coverage output file
 #2) run name
