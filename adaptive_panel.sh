@@ -1,8 +1,5 @@
 #!/bin/bash
 
-#commands used when processing fastqfile data, following epi2me guides
-
-
 #Usage
 helpFunction()
 {
@@ -60,7 +57,7 @@ if [[ "$pid" =~ ^[0-9]+$ ]]; then
    >&2 echo "INFO: No previous Guppy detected, running new analysis..."
 fi
 
-#####MAIN######
+#####MAIN PIPELINE######
 
 #create analysis dirs
 #dir variables
@@ -76,10 +73,7 @@ mkdir -p "$work_dir"/pycoQC
 mkdir -p "$work_dir"/coverage/mosdepth
 mkdir -p "$work_dir"/coverage/bedtools
 
-
-
-
-####### BASECALLING ########
+## BASECALLING ##
 #bascall from pod5 files in SUP mode with 5mc modification
 
 if [ -z "$skip_basecalling" ] 
@@ -104,7 +98,7 @@ cat "$output_dir"/"$run_name"/fastq/all/pass/*.fastq.gz > \
 
 fi
 
-####### ALIGNMENT ##########
+##ALIGNMENT ##
 #alignment step could be combined into guppy command to simplify the pipeline
 #maybe more flexible to keep separate?
 
@@ -136,7 +130,7 @@ samtools flagstat \
 "$output_dir"/"$run_name"/alignment/"$run_name".bam > "$output_dir"/"$run_name"/alignment/"$run_name"_flagstat.txt
 fi
 
-######### QC ###############
+##QC ##
 if [ -z "$skip_qc" ]
 then
 echo "INFO: Creating summary plots"
@@ -167,7 +161,7 @@ NanoPlot \
 --alength # Use aligned read length not sequence read length
 fi
 
-##### SV CALLING #####
+##SV CALLING ##
 if [ -z $skip_SV ]
 then
 echo "INFO: Calling SVs"
@@ -190,12 +184,13 @@ mkdir "$work_dir"/Sniffles
 cd "$work_dir"/Sniffles
 
 sniffles --input "$work_dir"/alignment/"$run_name".bam \
---vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf
+--vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
+--non-germline
 
 #cd "$pipeline_dir"
 fi
 
-####### ADAPTIVE SAMPLING ##########
+##ADAPTIVE SAMPLING ##
 #change to specify if adaptive when running command?
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
 
@@ -225,7 +220,7 @@ else
   echo "INFO: No adaptive sampling output detected."
 fi
 
-###### COVERAGE #####
+## COVERAGE ##
 echo "INFO: Calculating coverage"
 
 cd "$work_dir"/coverage/mosdepth 
