@@ -15,6 +15,12 @@ while getopts d:n:s:b:w: flag; do
   esac
 done
 
+# echo "PIPELINE DIR: $pipeline_dir"
+# echo "RUN NAME: $run_name"
+# echo "ADAPTIVE SUMMARY: $adaptive_summary"
+# echo "BED FILE: $bed_file"
+# echo "WORK DIR: $work_dir"
+# echo "BAM FILE: "$work_dir"/alignment/"$run_name".bam"
 
 mkdir -p "$work_dir"/adaptive_stats/adaptive_coverage
 cd "$work_dir"/adaptive_stats
@@ -25,7 +31,8 @@ echo $(date)
 echo "INFO: Subseting bam file..."
 # -b bam file
 # -a adaptive sequencing summary file
-#
+######
+#TODO change this section to use samtools view -N on output of subset_adaptive.py
 python3 $pipeline_dir/SCRIPTS/extract_reads_adaptive.py \
 --bam "$work_dir"/alignment/"$run_name".bam \
 --adaptive_output "$adaptive_summary" \
@@ -51,6 +58,7 @@ for f in *.sorted.bam; do
   bedtools coverage -a $bed_file -b $f -d > ./adaptive_coverage/"$decision"/"$decision"_per_base_depth.tsv
 done
 
+####
 
 #stats
 #TO ADD TO R SCRIPT

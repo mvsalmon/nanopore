@@ -75,9 +75,9 @@ mkdir -p "$work_dir"/coverage/mosdepth
 mkdir -p "$work_dir"/coverage/bedtools
 
 ## BASECALLING ##
-#bascall from pod5 files in SUP mode with 5mc modification
+bascall from pod5 files in SUP mode with 5mc modification
 
-if [ -z "$skip_basecalling" ] 
+if [ -z "$skip_basecalling" ]
 then
 echo $(date)
 echo "INFO: Basecalling..."
@@ -97,7 +97,6 @@ guppy_basecaller \
 #merge fastq
 cat "$output_dir"/"$run_name"/fastq/all/pass/*.fastq.gz > \
 "$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz
-
 fi
 
 ##ALIGNMENT ##
@@ -139,19 +138,19 @@ then
 echo $(date)
 echo "INFO: Creating summary plots"
 
-echo "INFO: PycoQC..."
-pycoQC \
---summary_file "$output_dir"/"$run_name"/fastq/all/sequencing_summary* \
---html_outfile "$output_dir"/"$run_name"/pycoQC/"$run_name"_pycoQC.html \
---bam_file "$output_dir"/"$run_name"/alignment/"$run_name".bam \
---quiet
+#PycoQC doesn't seem to work with new format of summary file (methylation?)
+# echo "INFO: PycoQC..."
+# pycoQC \
+# --summary_file "$output_dir"/"$run_name"/fastq/all/sequencing_summary* \
+# --html_outfile "$output_dir"/"$run_name"/pycoQC/"$run_name"_pycoQC.html \
+# --bam_file "$output_dir"/"$run_name"/alignment/"$run_name".bam \
+# --quiet
 
 echo "INFO: NanoPlot..."
 #plots of run using sequencing summary
 NanoPlot \
---summary "$run_dir"/sequencing_summary* \
+--summary "$output_dir"/"$run_name"/fastq/all/sequencing_summary* \
 --loglength \
---N50 \
 --outdir "$output_dir"/"$run_name"/NanoPlot/summary \
 --prefix "$run_name" \
 --threads 20
@@ -213,10 +212,9 @@ adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
 awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
      1 {print}' $adaptive_files > "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
-#adaptive_summary="$run_name"_combined_adaptive_sampling_summary.csv
-
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
+#samtools view -N takes list of read names to subset by.
   bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
   -n "$run_name" \
   -s "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
