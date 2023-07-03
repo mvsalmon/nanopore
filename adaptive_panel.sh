@@ -207,10 +207,10 @@ then
 #combine adaptive sampling summary files
 #find all adaptive sampling summary files
 #TODO check this works with a single file..
-adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
+#adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
 #concatenate adaptive summary files with a single header
-awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
-     1 {print}' $adaptive_files > "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
+#awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
+#     1 {print}' $adaptive_files > "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
@@ -225,6 +225,7 @@ else
 fi
 
 ## COVERAGE ##
+#is this necessary?
 echo $(date)
 echo "INFO: Calculating coverage"
 
@@ -250,4 +251,5 @@ samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_le
 samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
 
 #depth and coverage calculations on .tsv output from bedtools
-Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name
+#already done in adaptive.sh??
+#Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name

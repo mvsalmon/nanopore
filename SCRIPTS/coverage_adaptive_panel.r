@@ -8,7 +8,7 @@ args = commandArgs(trailingOnly = TRUE)
 
 # Coverage Function -------------------------------------------------------
 
-coverage <- function(cov_file, run_name, save_dir){
+coverage <- function(cov_file, run_name, output_dir){
   #calculate depth & coverage for each target in coverage file
 
   #summary of overall sequencing depth
@@ -20,7 +20,7 @@ coverage <- function(cov_file, run_name, save_dir){
               MeanDepth = mean(depthAtPos),
               SD = sd(depthAtPos))
   write_delim(depth_summary,
-              sprintf("%s_depth_summary.tsv", run_name),
+              sprintf("%s/%s_depth_summary.tsv", output_dir, run_name),
               delim = "\t",
               quote = "none")
   
@@ -33,7 +33,7 @@ coverage <- function(cov_file, run_name, save_dir){
               MeanDepth = mean(depthAtPos),
               SD = sd(depthAtPos))
   write_delim(per_gene_depth_summary,
-              sprintf("%s_per_gene_depth_summary.tsv", run_name),
+              sprintf("%s/%s_per_gene_depth_summary.tsv", output_dir, run_name),
               delim = "\t",
               quote = "none")
   
@@ -56,7 +56,7 @@ coverage <- function(cov_file, run_name, save_dir){
     #separate gene name and RefSeq accession
     separate(gene, into = c('gene', 'RefSeq'), sep = ',') %>%
     #output table with per-target depth and coverage info
-    write_delim(sprintf("%s_coverage_data.tsv", run_name),
+    write_delim(sprintf("%s/%s_coverage_data.tsv", output_dir, run_name),
                 delim = "\t",
                 quote = "none")
 
@@ -70,7 +70,7 @@ coverage <- function(cov_file, run_name, save_dir){
     theme(axis.text.x = element_text(size = 4)) +
     scale_x_discrete(guide = guide_axis(n.dodge = 3, angle = 45))
 
-  ggsave(sprintf("%s_depth_plot.pdf", run_name), depth_plot, path = save_dir)
+  ggsave(sprintf("%s_depth_plot.pdf", run_name), depth_plot, path = output_dir)
 
   #plot fractional coverage per target
   coverage_plot <- ggplot(depth_table, aes(x = gene, y = fractionalCoverage)) +
@@ -80,7 +80,7 @@ coverage <- function(cov_file, run_name, save_dir){
          y = 'Coverage')
     
 
-  ggsave(sprintf("%s_coverage_plot.pdf", run_name), coverage_plot,  path = save_dir)
+  ggsave(sprintf("%s_coverage_plot.pdf", run_name), coverage_plot,  path = output_dir)
   }
 
 
