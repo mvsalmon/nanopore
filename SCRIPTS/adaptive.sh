@@ -39,9 +39,13 @@ python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
 --run_name "$run_name"
 
 #subset bam file using samtools
-samtools view -@ 16 -N "$work_dir"/adaptive_stats/
+samtools view -@ 16 -hN "$work_dir"/adaptive_stats/"$run_name"_stop_receiving_read_ids.txt \
+"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_stop_receiving.bam
 
+samtools sort -@16 -o "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam "$work_dir"/alignment/"$run_name"_stop_receiving.bam
+samtools index "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam
 exit 1
+
 #get list of bam files from last step
 ls *.bam > bam_files.txt
 
