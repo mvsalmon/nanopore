@@ -5,7 +5,7 @@ def subset_adaptive():
     for key, values in read_dict.items():
         # out_path = options.output_dir
         # print(out_path)
-        with open(f'{options.output_dir}/{key}_read_ids.txt', 'w') as fp:
+        with open(f'{options.output_dir}/{options.run_name}_{key}_read_ids.txt', 'w') as fp:
             fp.write('\n'.join(values))
 
     
@@ -35,6 +35,7 @@ if __name__ == "__main__":
     parser = ArgumentParser(description='Extract reads by read name from bam file')
     parser.add_argument('-a', '--adaptive_output', help='adaptive sampling output file', required=True)
     parser.add_argument('-o', '--output_dir', help='output directory', required=True)
+    parser.add_argument('-n', '--run_name', help='name of sequencing run', required=True)
     options = parser.parse_args()
 
     subset_adaptive()

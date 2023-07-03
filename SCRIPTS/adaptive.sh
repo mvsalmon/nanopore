@@ -35,7 +35,12 @@ echo "INFO: Subseting bam file..."
 #TODO change this section to use samtools view -N on output of subset_adaptive.py
 python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
 --adaptive_output "$adaptive_summary" \
---output_dir "$work_dir"/adaptive_stats
+--output_dir "$work_dir"/adaptive_stats \
+--run_name "$run_name"
+
+#subset bam file using samtools
+samtools view -@ 16 -N "$work_dir"/adaptive_stats/
+
 exit 1
 #get list of bam files from last step
 ls *.bam > bam_files.txt
