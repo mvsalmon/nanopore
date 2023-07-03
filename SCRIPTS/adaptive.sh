@@ -23,7 +23,7 @@ done
 # echo "BAM FILE: "$work_dir"/alignment/"$run_name".bam"
 
 mkdir -p "$work_dir"/adaptive_stats/adaptive_coverage
-cd "$work_dir"/adaptive_stats
+#cd "$work_dir"/adaptive_stats
 
 
 #create bam files containg read ids for each adaptive sampling decision
@@ -33,11 +33,10 @@ echo "INFO: Subseting bam file..."
 # -a adaptive sequencing summary file
 ######
 #TODO change this section to use samtools view -N on output of subset_adaptive.py
-python3 $pipeline_dir/SCRIPTS/extract_reads_adaptive.py \
---bam "$work_dir"/alignment/"$run_name".bam \
+python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
 --adaptive_output "$adaptive_summary" \
---out "$run_name".bam
-
+--output_dir "$work_dir"/adaptive_stats
+exit 1
 #get list of bam files from last step
 ls *.bam > bam_files.txt
 
