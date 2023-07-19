@@ -75,7 +75,7 @@ mkdir -p "$work_dir"/coverage/mosdepth
 mkdir -p "$work_dir"/coverage/bedtools
 
 ## BASECALLING ##
-bascall from pod5 files in SUP mode with 5mc modification
+#TODO add option for modified bases
 
 if [ -z "$skip_basecalling" ]
 then
@@ -88,7 +88,7 @@ guppy_basecaller \
 --recursive \
 --save_path "$output_dir"/"$run_name"/fastq/all \
 --device cuda:0 \
---config dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_sup.cfg \
+--config dna_r10.4.1_e8.2_400bps_sup.cfg \
 --compress_fastq \
 --chunks_per_runner 350 \
 --gpu_runners_per_device 12 \
