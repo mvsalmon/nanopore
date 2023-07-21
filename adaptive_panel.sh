@@ -91,7 +91,7 @@ guppy_basecaller \
 --config dna_r10.4.1_e8.2_400bps_sup.cfg \
 --compress_fastq \
 --chunks_per_runner 350 \
---gpu_runners_per_device 12 \
+--gpu_runners_per_device 16 \
 --num_callers 4
 
 #merge fastq
@@ -207,10 +207,10 @@ then
 #combine adaptive sampling summary files
 #find all adaptive sampling summary files
 #TODO check this works with a single file..
-#adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
-#concatenate adaptive summary files with a single header
-#awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
-#     1 {print}' $adaptive_files > "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
+adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
+concatenate adaptive summary files with a single header
+awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
+    1 {print}' $adaptive_files > "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
