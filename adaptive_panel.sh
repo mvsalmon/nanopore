@@ -12,34 +12,40 @@ helpFunction()
    echo -e "\t-d Path to directory containing Nanopore run data. Should be the experiment level directory if several runs need to be analysed together."
    echo -e "\t-b BED file for adaptive sampling analysis" 
    echo -e "\t-o Output directory path"
-   echo -e "\t-r Path to reference genome mmi index"
-   echo -e "\t-a Path to adaptive sampling summary file"
+   echo -e "\t-m Path to reference genome mmi index"
+   echo -e "\t-r Path to reference genome fa file"
+   echo -e "\t-a Adaptive sampling analysis is enabled by default. Set this flag to skip this analysis"
    exit 1 # Exit script after printing help
 }
 
+#set defaults
+adaptive_sampling=1
+
 #parse arguments
 #TODO change this from getopts
-while getopts n:d:b:a:o:r:s:m:q:v:p:h opt; do
+while getopts n:d:b:o:m:r:s:l:q:v:ha opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
     b) bed_file="$OPTARG";;
-    a) adaptive_summary="$OPTARG";;
     o) output_dir="$OPTARG";;
+    m) mmi_index="$OPTARG";;
     r) ref_index="$OPTARG";;
     #options to skip steps - useful for isolating/debugging specific aspects
     s) skip_basecalling="$OPTARG";;
-    m) skip_alignment="$OPTARG";;
+    l) skip_alignment="$OPTARG";;
     q) skip_qc="$OPTARG";;
     v) skip_SV="$OPTARG";;
-    p) skip_adaptive="$OPTARG";;
+    #p) skip_adaptive="$OPTARG";;
     h) helpFunction;;
+    a) adaptive_sampling=0;;
   esac
 done
 
 #Help if mandatory arguments are empty
 if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
-   [ -z "$ref_index" ] || [ -z "$bed_file" ] || [ -z "$adaptive_summary" ]
+   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$adaptive_summary" ] \
+   [ -z "$ref_index"]
 then
    echo ""
    echo "ERROR: Missing one or more required arguments. See help message below.";
@@ -116,7 +122,7 @@ echo "INFO: Aligning..."
 /opt/ont/guppy/bin/minimap2-2.24 \
 -a \
 -x map-ont \
-"$ref_index" \
+"$mmi_index" \
 "$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz \
 -t 20 > "$output_dir"/"$run_name"/alignment/"$run_name".sam
 
@@ -178,7 +184,7 @@ mkdir "$work_dir"/CuteSV
 #TODO make path to ref genome a variable
 
 cuteSV "$work_dir"/alignment/"$run_name".bam \
-~/Tools/ref_genome/grch38/grch38.fa \
+"$ref_index" \
 "$work_dir"/CuteSV/"$run_name"_cuteSV.vcf \
 ./ \
 --max_cluster_bias_DEL 100 \
@@ -200,7 +206,7 @@ fi
 #change to specify if adaptive when running command?
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
 echo $(date)
-if [ -n "$adaptive_summary" ] && [ -z $skip_adaptive ]
+if [ "$adaptive_sampling" -eq 1 ]
 then
   echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..."
   echo "INFO: Combining adaptive summary files"
@@ -221,7 +227,7 @@ awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
   -b "$bed_file" \
   -w "$work_dir"
 else
-  echo "INFO: No adaptive sampling output detected."
+  echo "INFO: Skipping adaptive sampling analysis."
 fi
 
 ## COVERAGE ##
