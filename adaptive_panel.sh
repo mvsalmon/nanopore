@@ -164,7 +164,7 @@ NanoPlot \
 #plots of alignment using bam file
 NanoPlot \
 --bam "$output_dir"/"$run_name"/alignment/"$run_name".bam \
---outdir "$output_dir"/"$run_name"/Nanoplot/bam \
+--outdir "$output_dir"/"$run_name"/NanoPlot/bam \
 --loglength \
 --N50 \
 --prefix "$run_name" \
@@ -226,6 +226,17 @@ awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
   -s "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
   -b "$bed_file" \
   -w "$work_dir"
+
+# Nanplot on target reads
+NanoPlot \
+--bam "$work_dir"/alignment/"$run_name"_stop_receiving.bam \
+--outdir "$output_dir"/"$run_name"/NanoPlot/on_target \
+--loglength \
+--N50 \
+--prefix "$run_name" \
+--threads 20 \
+--alength # Use aligned read length not sequence read length
+
 else
   echo "INFO: Skipping adaptive sampling analysis."
 fi
