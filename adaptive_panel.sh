@@ -44,8 +44,8 @@ done
 
 #Help if mandatory arguments are empty
 if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
-   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$adaptive_summary" ] \
-   [ -z "$ref_index"]
+   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_index" ] 
+   
 then
    echo ""
    echo "ERROR: Missing one or more required arguments. See help message below.";
@@ -89,53 +89,62 @@ echo $(date)
 echo "INFO: Basecalling..."
 
 #TODO handle errors
-guppy_basecaller \
---input_path "$run_dir" \
---recursive \
---save_path "$output_dir"/"$run_name"/fastq/all \
---device cuda:0 \
---config dna_r10.4.1_e8.2_400bps_sup.cfg \
---compress_fastq \
---chunks_per_runner 350 \
---gpu_runners_per_device 16 \
---num_callers 4
+# guppy_basecaller \
+# --input_path "$run_dir" \
+# --recursive \
+# --save_path "$output_dir"/"$run_name"/fastq/all \
+# --device cuda:0 \
+# --config dna_r10.4.1_e8.2_400bps_sup.cfg \
+# --compress_fastq \
+# --chunks_per_runner 350 \
+# --gpu_runners_per_device 16 \
+# --num_callers 4
+
+# change basecaller to dorado with integrated basecalling (minimap2)
+# hardcode path for now
+#/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$output_dir"/alignment/"$run_name".raw.bam
+
+#working
+/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference ~/Tools/ref_genome/grch38/grch38.mmi hac@v4.3.0 /var/lib/minknow/data/240110_W2314468/W2314468/ > /mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/240110_W2314468/alignment/240110_W2314468.raw.bam
 
 #merge fastq
-cat "$output_dir"/"$run_name"/fastq/all/pass/*.fastq.gz > \
-"$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz
-fi
+# cat "$output_dir"/"$run_name"/fastq/all/pass/*.fastq.gz > \
+# "$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz
+# fi
 
 ##ALIGNMENT ##
+## NOW MERGED INTO BASECALLING STEP WITH DIRECT BAM OUTPUT ##
+
 #alignment step could be combined into guppy command to simplify the pipeline
 #maybe more flexible to keep separate?
 
-if [ -z "$skip_alignment" ]
-then
-echo $(date)
-echo "INFO: Aligning..."
+# if [ -z "$skip_alignment" ]
+# then
+# echo $(date)
+# echo "INFO: Aligning..."
 
-#align merged fastq to grch38 reference with minimap2
-#-a: output SAM file
-#-x map-ont: nanopore mode (default)
-#using already generated minimap2 indexed reference *.mmi
+# #align merged fastq to grch38 reference with minimap2
+# #-a: output SAM file
+# #-x map-ont: nanopore mode (default)
+# #using already generated minimap2 indexed reference *.mmi
 
-/opt/ont/guppy/bin/minimap2-2.24 \
--a \
--x map-ont \
-"$mmi_index" \
-"$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz \
--t 20 > "$output_dir"/"$run_name"/alignment/"$run_name".sam
+# /opt/ont/guppy/bin/minimap2-2.24 \
+# -a \
+# -x map-ont \
+# "$mmi_index" \
+# "$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz \
+# -t 20 > "$output_dir"/"$run_name"/alignment/"$run_name".sam
 
 #use samtools to convert to bam file and sort by position
+# TODO delete raw bam file
 samtools sort \
--@ 20 -o "$output_dir"/"$run_name"/alignment/"$run_name".bam "$output_dir"/"$run_name"/alignment/"$run_name".sam
+-@ 20 -o "$output_dir"/"$run_name"/alignment/"$run_name".raw.bam "$output_dir"/"$run_name"/alignment/"$run_name".bam
 
 #index sorted bam file
-samtools index "$output_dir"/"$run_name"/alignment/"$run_name".bam
+samtools index -@ 20 "$output_dir"/"$run_name"/alignment/"$run_name".bam
 
 #save stats
-samtools flagstat \
-"$output_dir"/"$run_name"/alignment/"$run_name".bam > "$output_dir"/"$run_name"/alignment/"$run_name"_flagstat.txt
+samtools flagstat "$output_dir"/"$run_name"/alignment/"$run_name".bam > "$output_dir"/"$run_name"/alignment/"$run_name"_flagstat.txt
 fi
 
 ##QC ##
@@ -154,12 +163,13 @@ echo "INFO: Creating summary plots"
 
 echo "INFO: NanoPlot..."
 #plots of run using sequencing summary
-NanoPlot \
---summary "$output_dir"/"$run_name"/fastq/all/sequencing_summary* \
---loglength \
---outdir "$output_dir"/"$run_name"/NanoPlot/summary \
---prefix "$run_name" \
---threads 20
+# TODO check where sequencing summary from dorado is stored
+# NanoPlot \
+# --summary "$output_dir"/"$run_name"/fastq/all/sequencing_summary* \
+# --loglength \
+# --outdir "$output_dir"/"$run_name"/NanoPlot/summary \
+# --prefix "$run_name" \
+# --threads 20
 
 #plots of alignment using bam file
 NanoPlot \
@@ -214,7 +224,7 @@ then
 #find all adaptive sampling summary files
 #TODO check this works with a single file..
 adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
-concatenate adaptive summary files with a single header
+# concatenate adaptive summary files with a single header
 awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
     1 {print}' $adaptive_files > "$run_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
