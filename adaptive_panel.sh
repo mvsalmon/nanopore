@@ -74,7 +74,7 @@ echo $(date)
 echo "INFO: Output Directory: $work_dir"
 
 mkdir -p "$work_dir"/alignment
-mkdir -p "$work_dir"/fastq/all
+#mkdir -p "$work_dir"/fastq/all
 mkdir -p "$work_dir"/NanoPlot
 mkdir -p "$work_dir"/pycoQC
 mkdir -p "$work_dir"/coverage/mosdepth
