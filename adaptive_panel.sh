@@ -53,15 +53,16 @@ then
 fi
 
 #check for running guppyd service before use and exit if running
-pid=$( nvidia-smi | grep guppy | awk '{print $5}' )
+
+pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
 if [[ "$pid" =~ ^[0-9]+$ ]]; then
-  >&2 echo "EXITING: Previous Guppy instance detected. Try: 'sudo service guppyd stop' then retry."
+  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
   exit 1
   #kill -9 $pid
  else
    >&2 echo $(date)
-   >&2 echo "INFO: No previous Guppy detected, running new analysis..."
+   >&2 echo "INFO: No running Dorado detected, running new analysis..."
 fi
 
 #####MAIN PIPELINE######
@@ -102,11 +103,14 @@ echo "INFO: Basecalling..."
 
 # change basecaller to dorado with integrated basecalling (minimap2)
 # hardcode path for now
-# dorado command doesn't like being passed variables?
-#/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$output_dir"/alignment/"$run_name".raw.bam
+# dorado basecalling
+/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$output_dir"/"$run_name"/alignment/"$run_name".raw.bam
+
+###temp exit for testing dorado command###
+#exit
 
 #working
-/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference ~/Tools/ref_genome/grch38/grch38.mmi hac@v4.3.0 /var/lib/minknow/data/240110_W2314468/W2314468/ > /mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/240110_W2314468/alignment/240110_W2314468.raw.bam
+#/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference ~/Tools/ref_genome/grch38/grch38.mmi hac@v4.3.0 /var/lib/minknow/data/240110_W2314468/W2314468/ > /mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/240110_W2314468/alignment/240110_W2314468.raw.bam
 
 # generate sequencing summary file
 /home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado summary -v "$output_dir"/alignment/"$run_name".bam > "$output_dir"/alignment/"$run_name".summary.tsv
