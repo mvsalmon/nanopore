@@ -94,22 +94,27 @@ echo "INFO: Basecalling..."
 # change basecaller to dorado with integrated basecalling (minimap2)
 # hardcode dorado path for now
 # dorado basecalling
-/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$output_dir"/"$run_name"/alignment/"$run_name".raw.bam
+/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
 # generate sequencing summary file
-/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado summary -v "$output_dir"/alignment/"$run_name".bam > "$output_dir"/alignment/"$run_name".summary.tsv
+echo $(date)
+echo "INFO: Generating sequencing summary file..."
+/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado summary -v "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name".summary.tsv
 
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads
 # TODO delete raw bam file
+
+echo "INFO: Sorting and indexing bam file..."
 samtools sort \
--@ 20 -o "$output_dir"/"$run_name"/alignment/"$run_name".bam "$output_dir"/"$run_name"/alignment/"$run_name".raw.bam
+-@ 20 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment/"$run_name".raw.bam
 
 #index sorted bam file
-samtools index -@ 20 "$output_dir"/"$run_name"/alignment/"$run_name".bam
+samtools index -@ 20 "$work_dir"/alignment/"$run_name".bam
 
 #save stats
-samtools flagstat -@ 20"$output_dir"/"$run_name"/alignment/"$run_name".bam > "$output_dir"/"$run_name"/alignment/"$run_name"_flagstat.txt
+echo "INFO: Generating flagstats..."
+samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
 
 else
 echo $(date)
@@ -123,20 +128,22 @@ echo $(date)
 echo "INFO: Creating summary plots"
 
 
-echo "INFO: NanoPlot..."
+echo "INFO: NanoPlot all reads..."
 #plots of run using sequencing summary
 # TODO check where sequencing summary from dorado is stored
 NanoPlot \
---summary "$output_dir"/"$run_name"/alignment/"$run_name".summary.tsv \
+--summary "$work_dir"/alignment/"$run_name".summary.tsv \
 --loglength \
---outdir "$output_dir"/"$run_name"/NanoPlot/summary \
+--outdir "$work_dir"/NanoPlot/summary \
 --prefix "$run_name" \
 --threads 20
 
 #plots of alignment using bam file
+echo $(date)
+echo "INFO NanoPlot on-target reads..."
 NanoPlot \
---bam "$output_dir"/"$run_name"/alignment/"$run_name".bam \
---outdir "$output_dir"/"$run_name"/NanoPlot/bam \
+--bam "$work_dir"/alignment/"$run_name".bam \
+--outdir "$work_dir"/NanoPlot/bam \
 --loglength \
 --N50 \
 --prefix "$run_name" \
@@ -188,21 +195,21 @@ then
 adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
 # concatenate adaptive summary files with a single header
 awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
-    1 {print}' $adaptive_files > "$output_dir"/"$run_name"/"$run_name"_combined_adaptive_sampling_summary.csv
+    1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
 #samtools view -N takes list of read names to subset by.
 bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 -n "$run_name" \
--s "$output_dir"/"$run_name"/"$run_name"_combined_adaptive_sampling_summary.csv \
+-s "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
 -b "$bed_file" \
 -w "$work_dir"
 
 # Nanplot on target reads
 NanoPlot \
 --bam "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
---outdir "$output_dir"/"$run_name"/NanoPlot/on_target \
+--outdir "$work_dir"/NanoPlot/on_target \
 --loglength \
 --N50 \
 --prefix "$run_name" \
