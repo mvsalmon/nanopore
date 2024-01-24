@@ -90,58 +90,14 @@ echo $(date)
 echo "INFO: Basecalling..."
 
 #TODO handle errors
-# guppy_basecaller \
-# --input_path "$run_dir" \
-# --recursive \
-# --save_path "$output_dir"/"$run_name"/fastq/all \
-# --device cuda:0 \
-# --config dna_r10.4.1_e8.2_400bps_sup.cfg \
-# --compress_fastq \
-# --chunks_per_runner 350 \
-# --gpu_runners_per_device 16 \
-# --num_callers 4
 
 # change basecaller to dorado with integrated basecalling (minimap2)
-# hardcode path for now
+# hardcode dorado path for now
 # dorado basecalling
 /home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$output_dir"/"$run_name"/alignment/"$run_name".raw.bam
 
-###temp exit for testing dorado command###
-#exit
-
-#working
-#/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference ~/Tools/ref_genome/grch38/grch38.mmi hac@v4.3.0 /var/lib/minknow/data/240110_W2314468/W2314468/ > /mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/240110_W2314468/alignment/240110_W2314468.raw.bam
-
 # generate sequencing summary file
 /home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado summary -v "$output_dir"/alignment/"$run_name".bam > "$output_dir"/alignment/"$run_name".summary.tsv
-
-#merge fastq
-# cat "$output_dir"/"$run_name"/fastq/all/pass/*.fastq.gz > \
-# "$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz
-# fi
-
-##ALIGNMENT ##
-## NOW MERGED INTO BASECALLING STEP WITH DIRECT BAM OUTPUT ##
-
-#alignment step could be combined into guppy command to simplify the pipeline
-#maybe more flexible to keep separate?
-
-# if [ -z "$skip_alignment" ]
-# then
-# echo $(date)
-# echo "INFO: Aligning..."
-
-# #align merged fastq to grch38 reference with minimap2
-# #-a: output SAM file
-# #-x map-ont: nanopore mode (default)
-# #using already generated minimap2 indexed reference *.mmi
-
-# /opt/ont/guppy/bin/minimap2-2.24 \
-# -a \
-# -x map-ont \
-# "$mmi_index" \
-# "$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz \
-# -t 20 > "$output_dir"/"$run_name"/alignment/"$run_name".sam
 
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads
