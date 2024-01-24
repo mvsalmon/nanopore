@@ -122,13 +122,6 @@ then
 echo $(date)
 echo "INFO: Creating summary plots"
 
-#PycoQC doesn't seem to work with new format of summary file (methylation?)
-# echo "INFO: PycoQC..."
-# pycoQC \
-# --summary_file "$output_dir"/"$run_name"/fastq/all/sequencing_summary* \
-# --html_outfile "$output_dir"/"$run_name"/pycoQC/"$run_name"_pycoQC.html \
-# --bam_file "$output_dir"/"$run_name"/alignment/"$run_name".bam \
-# --quiet
 
 echo "INFO: NanoPlot..."
 #plots of run using sequencing summary
