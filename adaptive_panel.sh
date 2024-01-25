@@ -99,7 +99,7 @@ echo "INFO: Basecalling..."
 # generate sequencing summary file
 echo $(date)
 echo "INFO: Generating sequencing summary file..."
-/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado summary -v "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name".summary.tsv
+/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".summary.tsv
 
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads
