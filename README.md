@@ -1,21 +1,20 @@
 # Nanopore Pipeline
-Pipeline for analysis and SV calling of targeted nanopore sequencing data.
+Pipeline for basecalling, alignment and SV calling of targeted nanopore sequencing data from an adaptive sampling sequencing run.
 
 ## Usage 
-nanopore_pipeline.sh -n \<run name\> -d \<directory containing fast5 files\> -b \<bed file describing targeted regions\> 
-  
-  optional arguments for adaptive sampling:
-  
-   -a:  _adaptive sampling summary output file_
-  
+nanopore_pipeline.sh -n *run name* -d *\path\to\sequencing\data* -b *\path\to\adaptive sampling.bed* -o *\path\to\output\directory*
+                      -m *\path\to\reference.mmi* -r *\path\to\reference\fasta.fa* 
+
+Optional: -a Skip adaptive sampling? Y/N. Default N
+
 
 ## Dependencies
 
-Guppy,
-minimap2,
+Dorado with minimap2,
+Sniffles2,
 Python 3+,
 R + tidyverse,
-pycoQC,
+NanoPlot,
 samtools,
 bedtools,
 mosdepth,
