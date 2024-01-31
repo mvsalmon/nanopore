@@ -1,5 +1,6 @@
-require(tidyverse)
+library(tidyverse)
 
+#run_name = c("E16023_combined_chr_grp")
 args = commandArgs(trailingOnly = TRUE)
 #1) run name
 
@@ -8,24 +9,43 @@ args = commandArgs(trailingOnly = TRUE)
 coverage <- function(cov_file, run_name, save_dir){
   #calculate depth & coverage for each target in coverage file
 
-  #  cov_data <- cov_file %>%
-  #    group_by(gene)
-
+  #summary of overall sequencing depth
+  depth_summary <- cov_file %>% 
+    ungroup() %>%
+    summarise(MinDepth = min(depthAtPos),
+              MaxDepth = max(depthAtPos),
+              MedianDepth = median(depthAtPos),
+              MeanDepth = mean(depthAtPos),
+              SD = sd(depthAtPos))
+  write_delim(depth_summary,
+              sprintf("%s_depth_summary.tsv", run_name),
+              delim = "\t",
+              quote = "none")
+  
+  #per-gene summary
+  per_gene_depth_summary <- cov_file %>% 
+    group_by(gene, chrom) %>%
+    summarise(MinDepth = min(depthAtPos),
+              MaxDepth = max(depthAtPos),
+              MedianDepth = median(depthAtPos),
+              MeanDepth = mean(depthAtPos),
+              SD = sd(depthAtPos))
+  write_delim(per_gene_depth_summary,
+              sprintf("%s_per_gene_depth_summary.tsv", run_name),
+              delim = "\t",
+              quote = "none")
+  
   #count bases with non-zero coverage
   coverage_data <- cov_file %>%
     filter(depthAtPos != 0) %>%
     tally(name = 'coveredBases')
 
-    # if(str_detect(coverage$gene, "^ENST")){
-    #   coverage <- coverage %>%
-    #     separate(gene, into = c('Transcript_ID', 'gene'), sep = '_')
-    # }
 
   #depth and coverage calculations
   depth_table <- cov_file %>%
     summarise(featureLength = n(),
               #mean of per-base depth for a feature
-              meanDepth = mean(depthAtPos),
+              medianDepth = median(depthAtPos),
               ) %>%
     #join coverage data
     left_join(coverage_data) %>%
@@ -41,20 +61,22 @@ coverage <- function(cov_file, run_name, save_dir){
   #summary of coverage data
 
   #plot depth per target
-  depth_plot <- ggplot(depth_table, aes(x = gene, y = meanDepth)) +
+  depth_plot <- ggplot(depth_table, aes(x = gene, y = medianDepth)) +
     geom_bar(stat = 'identity') +
     labs(title = sprintf("%s mean depth", run_name),
-         y = 'Mean Depth') +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+         y = 'Median Depth') +
+    theme(axis.text.x = element_text(size = 4)) +
+    scale_x_discrete(guide = guide_axis(n.dodge = 3, angle = 45))
 
   ggsave(sprintf("%s_depth_plot.pdf", run_name), depth_plot, path = save_dir)
 
   #plot fractional coverage per target
   coverage_plot <- ggplot(depth_table, aes(x = gene, y = fractionalCoverage)) +
     geom_bar(stat = 'identity') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5, size = 4)) +
     labs(title = sprintf("%s target fractional coverage", run_name),
-         y = 'Coverage') +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+         y = 'Coverage')
+    
 
   ggsave(sprintf("%s_coverage_plot.pdf", run_name), coverage_plot,  path = save_dir)
   }
@@ -66,11 +88,11 @@ coverage <- function(cov_file, run_name, save_dir){
                         delim = "\t",
                         col_names = c("chrom", "chromStart", "chromEnd", "gene", "score", "strand", "basePos", "depthAtPos")
                         ) %>%
-                        
-    group_by(gene)
+    #grouping by chrom accounts for PAR1 on X/Y where no mapping to Y makes a 
+    #few genes in this region appear to only have half the depth/coverage
+    #chrom group gives a row for each gene on X and Y
+    group_by(gene, chrom)
 
   coverage(cov_file, args[1], getwd())
-
-
 
 quit(save = "no")

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-#commands used when processing fastqfile data, following epi2me guides
-
-
 #Usage
 helpFunction()
 {
@@ -10,183 +7,225 @@ helpFunction()
    echo "Pipeline for analysis of Nanopore runs."
    echo ""
    echo "Usage: $0 -h display help -n run_name -d run_dir -o output_dir -b bed_file"
+   echo "Required arguments:"
    echo -e "\t-n Name of Nanopore run"
    echo -e "\t-d Path to directory containing Nanopore run data. Should be the experiment level directory if several runs need to be analysed together."
    echo -e "\t-b BED file for adaptive sampling analysis" 
    echo -e "\t-o Output directory path"
-   echo -e "\t-r Path to reference genome mmi index"
+   echo -e "\t-m Path to reference genome mmi index"
+   echo -e "\t-r Path to reference genome fa file"
+   echo -e "\t-a Adaptive sampling analysis is enabled by default. Set this flag to skip this analysis"
    exit 1 # Exit script after printing help
 }
 
+#set defaults
+adaptive_sampling=1
+
 #parse arguments
-while getopts n:d:b:a:o:r:s:m:q:h opt; do
+#TODO change this from getopts
+while getopts n:d:b:o:m:r:s:l:q:v:ha opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
     b) bed_file="$OPTARG";;
-    a) adaptive_summary="$OPTARG";;
     o) output_dir="$OPTARG";;
+    m) mmi_index="$OPTARG";;
     r) ref_index="$OPTARG";;
     #options to skip steps - useful for isolating/debugging specific aspects
     s) skip_basecalling="$OPTARG";;
-    m) skip_alignment="$OPTARG";;
+    l) skip_alignment="$OPTARG";;
     q) skip_qc="$OPTARG";;
+    v) skip_SV="$OPTARG";;
+    #p) skip_adaptive="$OPTARG";;
     h) helpFunction;;
+    a) adaptive_sampling=0;;
   esac
 done
 
 #Help if mandatory arguments are empty
 if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
-   [ -z "$ref_index" ] || [ -z "$bed_file" ]
+   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_index" ] 
+   
 then
-   echo "Some or all of the required arguments are empty";
+   echo ""
+   echo "ERROR: Missing one or more required arguments. See help message below.";
    helpFunction
 fi
 
 #check for running guppyd service before use and exit if running
-pid=$( nvidia-smi | grep guppy | awk '{print $5}' )
+
+pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
 if [[ "$pid" =~ ^[0-9]+$ ]]; then
-  >&2 echo "EXITING: Previous Guppy instance detected. Try: 'sudo service guppyd stop' then retry."
+  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
   exit 1
   #kill -9 $pid
  else
-   >&2 echo "INFO: No previous Guppy detected, running new analysis..."
+   >&2 echo $(date)
+   >&2 echo "INFO: No running Dorado detected, running new analysis..."
 fi
 
-#####MAIN######
+#####MAIN PIPELINE######
 
 #create analysis dirs
-echo "INFO: Output Directory: $output_dir/$run_name"
-
-mkdir -p "$output_dir"/"$run_name"/alignment
-mkdir -p "$output_dir"/"$run_name"/fastq/all
-mkdir -p "$output_dir"/"$run_name"/NanoPlot
-mkdir -p "$output_dir"/"$run_name"/pycoQC
-mkdir -p "$output_dir"/"$run_name"/coverage/mosdepth
-mkdir -p "$output_dir"/"$run_name"/coverage/bedtools
-
 #dir variables
 pipeline_dir=$(pwd)
 work_dir="$output_dir"/"$run_name"
+echo $(date)
+echo "INFO: Output Directory: $work_dir"
 
+mkdir -p "$work_dir"/alignment
+#mkdir -p "$work_dir"/fastq/all
+mkdir -p "$work_dir"/NanoPlot
+mkdir -p "$work_dir"/pycoQC
+mkdir -p "$work_dir"/coverage/mosdepth
+mkdir -p "$work_dir"/coverage/bedtools
 
-####### BASECALLING ########
-#bascall from pod5 files in SUP mode
+## BASECALLING ##
+#TODO add option for modified bases
 
-if [ -z "$skip_basecalling" ] 
+if [ -z "$skip_basecalling" ]
 then
+echo $(date)
 echo "INFO: Basecalling..."
 
-guppy_basecaller \
---input_path "$run_dir" \
---recursive \
---save_path "$output_dir"/"$run_name"/fastq/all \
---device cuda:0 \
---config dna_r10.4.1_e8.2_400bps_hac.cfg \
---compress_fastq \
---chunks_per_runner 1400 \
---gpu_runners_per_device 32
+#TODO handle errors
 
+# change basecaller to dorado with integrated basecalling (minimap2)
+# hardcode dorado path for now
+# dorado basecalling
+/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
+# generate sequencing summary file
+echo $(date)
+echo "INFO: Generating sequencing summary file..."
+/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".summary.tsv
 
-#merge fastq
-cat "$output_dir"/"$run_name"/fastq/all/pass/*.fastq.gz > \
-"$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz
+# use samtools to sort, index and generate flagstat file.
+# -@ specifies number of threads
+# TODO delete raw bam file
 
-fi
-
-####### ALIGNMENT ##########
-#alignment step could be combined into guppy command to simplify the pipeline
-#maybe more flexible to keep separate?
-
-if [ -z "$skip_alignment" ]
-then
-echo "INFO: Aligning..."
-
-#align merged fastq to grch38 reference with minimap2
-#-a: output SAM file
-#-x map-ont: nanopore mode (default)
-#using already generated minimap2 indexed reference *.mmi
-
-/opt/ont/guppy/bin/minimap2-2.24 \
--a \
--x map-ont \
-"$ref_index" \
-"$output_dir"/"$run_name"/fastq/"$run_name".fastq.gz \
- -t 20 > "$output_dir"/"$run_name"/alignment/"$run_name".sam
-
-
-#use samtools to convert to bam file and sort by position
+echo "INFO: Sorting and indexing bam file..."
 samtools sort \
--o "$output_dir"/"$run_name"/alignment/"$run_name".bam "$output_dir"/"$run_name"/alignment/"$run_name".sam
+-@ 20 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment/"$run_name".raw.bam
 
 #index sorted bam file
-samtools index "$output_dir"/"$run_name"/alignment/"$run_name".bam
+samtools index -@ 20 "$work_dir"/alignment/"$run_name".bam
 
 #save stats
-samtools flagstat \
-"$output_dir"/"$run_name"/alignment/"$run_name".bam > "$output_dir"/"$run_name"/alignment/"$run_name"_flagstat.txt
+echo "INFO: Generating flagstats..."
+samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
+
+else
+echo $(date)
+echo "INFO: Skipping basecalling"
 fi
-######### QC ###############
+
+##QC ##
 if [ -z "$skip_qc" ]
 then
+echo $(date)
 echo "INFO: Creating summary plots"
 
-pycoQC \
---summary_file "$output_dir"/"$run_name"/fastq/all/sequencing_summary* \
---html_outfile "$output_dir"/"$run_name"/pycoQC/"$run_name"_pycoQC.html \
---bam_file "$output_dir"/"$run_name"/alignment/"$run_name".bam \
---quiet
 
+echo "INFO: NanoPlot all reads..."
 #plots of run using sequencing summary
+# TODO check where sequencing summary from dorado is stored
 NanoPlot \
---summary "$run_dir"/sequencing_summary* \
+--summary "$work_dir"/alignment/"$run_name".summary.tsv \
 --loglength \
---N50 \
---outdir "$output_dir"/"$run_name"/NanoPlot/summary \
+--outdir "$work_dir"/NanoPlot/summary \
 --prefix "$run_name" \
 --threads 20
 
 #plots of alignment using bam file
+echo $(date)
+echo "INFO NanoPlot on-target reads..."
 NanoPlot \
---bam "$output_dir"/"$run_name"/alignment/"$run_name".bam \
---outdir "$output_dir"/"$run_name"/Nanoplot/bam
+--bam "$work_dir"/alignment/"$run_name".bam \
+--outdir "$work_dir"/NanoPlot/bam \
 --loglength \
 --N50 \
---prefix "$run_name"
---threads 20
+--prefix "$run_name" \
+--threads 20 \
 --alength # Use aligned read length not sequence read length
 fi
 
-####### ADAPTIVE SAMPLING ##########
+##SV CALLING ##
+if [ -z $skip_SV ]
+then
+echo $(date)
+echo "INFO: Calling SVs"
+#cuteSV
+mkdir "$work_dir"/CuteSV
+
+#cuteSV for fusion gene detection
+#TODO make path to ref genome a variable
+
+cuteSV "$work_dir"/alignment/"$run_name".bam \
+"$ref_index" \
+"$work_dir"/CuteSV/"$run_name"_cuteSV.vcf \
+./ \
+--max_cluster_bias_DEL 100 \
+--diff_ratio_merging_DEL 0.3 \
+--max_size -1 #no uppper limit on SV size 
+
+#Sniffles
+mkdir "$work_dir"/Sniffles
+cd "$work_dir"/Sniffles
+
+sniffles --input "$work_dir"/alignment/"$run_name".bam \
+--vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
+--non-germline
+
+#cd "$pipeline_dir"
+fi
+
+##ADAPTIVE SAMPLING ##
 #change to specify if adaptive when running command?
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
-
-if [ -n "$adaptive_summary" ]
+echo $(date)
+if [ "$adaptive_sampling" -eq 1 ]
 then
   echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..."
-
+  echo "INFO: Combining adaptive summary files"
 #combine adaptive sampling summary files
-#find all adaptive sampling summary files and store in an array
-mapfile -d '' adaptive_files < <(find "$run_dir" 'adaptive*' -print0)
-#slice the array to get the header only once in the output file
-{ cat ${adaptive_files[@]:0:1}; grep -v "^batch_time" ${array[@]:1}; } > \
-"$run_name"_combined_adaptive_sampling_summary.csv
+#find all adaptive sampling summary files
+#TODO check this works with a single file..
+adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
+# concatenate adaptive summary files with a single header
+awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
+    1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
 #run adaptive sampling analysis script
 # TODO try and speed this step up - subsetting bam files takes forever, another way?
-  bash "$pipeline_dir"/ALIGNMENT/SCRIPTS/adaptive.sh -d $pipeline_dir \
-  -n $run_name \
-  -s "$run_name"_combined_adaptive_sampling_summary.csv \
-  -b $bed_file \
-  -w "$work_dir"
+#samtools view -N takes list of read names to subset by.
+bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
+-n "$run_name" \
+-s "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
+-b "$bed_file" \
+-w "$work_dir"
+
+# Nanplot on target reads
+NanoPlot \
+--bam "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
+--outdir "$work_dir"/NanoPlot/on_target \
+--loglength \
+--N50 \
+--prefix "$run_name" \
+--threads 20 \
+--alength # Use aligned read length not sequence read length
+
 else
-  echo "INFO: No adaptive sampling output detected."
+  echo "INFO: Skipping adaptive sampling analysis."
 fi
 
-###### COVERAGE #####
-cd "$work_dir"/coverage/mosepth 
+## COVERAGE ##
+#is this necessary?
+echo $(date)
+echo "INFO: Calculating coverage"
+
+cd "$work_dir"/coverage/mosdepth 
 
 #use mosdepth to calculate depth
 mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
@@ -197,6 +236,7 @@ cd ../bedtools
 #on target
 bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
 #off target with -v
+#might cut this out - doesn't seem that necessary
 bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
 
 samtools index "$run_name"_off_target.bam
@@ -206,4 +246,6 @@ samtools index "$run_name"_on_target.bam
 samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
 samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
 
-
+#depth and coverage calculations on .tsv output from bedtools
+#already done in adaptive.sh??
+#Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name

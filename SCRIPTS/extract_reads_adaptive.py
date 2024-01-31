@@ -14,11 +14,13 @@ def get_reads(adaptive_output):
     #Added by MS
     #iterate over adaptive output file and store each read_id in dict {decision:[id1, id2, id3...]}
     read_dict = {}
+    read_count = 0
     with open(adaptive_output, 'r') as f:
         #skip header row
         for head in range(1):
             next(f)
         for line in f:
+            read_count += 1
             read = line.split(',')
             read_id = read[4].strip()
             decision = read[6].strip()
