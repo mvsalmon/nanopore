@@ -91,15 +91,13 @@ echo "INFO: Basecalling..."
 
 #TODO handle errors
 
-# change basecaller to dorado with integrated basecalling (minimap2)
-# hardcode dorado path for now
-# dorado basecalling
-/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
+# dorado basecalling with integrated alignmnet (minimap2)
+dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
 # generate sequencing summary file
 echo $(date)
 echo "INFO: Generating sequencing summary file..."
-/home/matt/Tools/dorado-0.5.0-linux-x64/bin/dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".summary.tsv
+dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".summary.tsv
 
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads

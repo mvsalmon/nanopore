@@ -9,6 +9,7 @@ Optional: -a Skip adaptive sampling? Y/N. Default N
 
 
 ## Dependencies
+All tools need to be in PATH
 
 Dorado with minimap2,
 Sniffles2,
