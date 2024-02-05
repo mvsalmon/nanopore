@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# TODO logging
 #Usage
 helpFunction()
 {
@@ -205,6 +205,7 @@ bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 -w "$work_dir"
 
 # Nanplot on target reads
+# use aligned length and filter reads with Q < 8
 NanoPlot \
 --bam "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
 --outdir "$work_dir"/NanoPlot/on_target \
@@ -212,7 +213,8 @@ NanoPlot \
 --N50 \
 --prefix "$run_name" \
 --threads 20 \
---alength # Use aligned read length not sequence read length
+--alength \
+--minqual 8 
 
 else
   echo "INFO: Skipping adaptive sampling analysis."
