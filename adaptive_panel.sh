@@ -14,7 +14,7 @@ helpFunction()
    echo -e "\t-o Output directory path"
    echo -e "\t-m Path to reference genome mmi index"
    echo -e "\t-r Path to reference genome fa file"
-   echo -e "\t-a Adaptive sampling analysis is enabled by default. Set this flag to skip this analysis"
+   echo -e "\t-a Adaptive sampling analysis is enabled by default. Set this flag to 0 to skip this analysis"
    exit 1 # Exit script after printing help
 }
 
@@ -54,16 +54,16 @@ fi
 
 #check for running guppyd service before use and exit if running
 
-pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
+# pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
-if [[ "$pid" =~ ^[0-9]+$ ]]; then
-  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
-  exit 1
-  #kill -9 $pid
- else
-   >&2 echo $(date)
-   >&2 echo "INFO: No running Dorado detected, running new analysis..."
-fi
+# if [[ "$pid" =~ ^[0-9]+$ ]]; then
+#   >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+#   exit 1
+#   #kill -9 $pid
+#  else
+#    >&2 echo $(date)
+#    >&2 echo "INFO: No running Dorado detected, running new analysis..."
+# fi
 
 #####MAIN PIPELINE######
 
@@ -206,6 +206,7 @@ bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 
 # Nanplot on target reads
 # use aligned length and filter reads with Q < 8
+# TODO filter bam file first?
 NanoPlot \
 --bam "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
 --outdir "$work_dir"/NanoPlot/on_target \
