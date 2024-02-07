@@ -92,7 +92,7 @@ echo "INFO: Basecalling..."
 #TODO handle errors
 
 # dorado basecalling with integrated alignmnet (minimap2)
-dorado basecaller --device cuda:0 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
+dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
 # generate sequencing summary file
 echo $(date)
