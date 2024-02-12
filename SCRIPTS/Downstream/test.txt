@@ -1,0 +1,2 @@
+E:/Nanopore/Panel_validation/240110_W2314468/NanoPlot/on_target/240110_W2314468NanoStats.txt
+E:/Nanopore/Panel_validation/240118_Jena_CML_9/NanoPlot/on_target/240118_Jena_CML_9NanoStats.txt
