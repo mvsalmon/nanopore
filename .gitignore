@@ -1,2 +1,5 @@
 .temp*
 .vscode
+.idea
+/SCRIPTS/Downstream/test.txt
+/SCRIPTS/Downstream/QC_Summary.csv
