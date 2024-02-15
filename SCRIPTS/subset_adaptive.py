@@ -9,8 +9,6 @@ def subset_adaptive():
             fp.write('\n'.join(values))
 
 
-
-    
 def get_reads(adaptive_output):
     """iterate over adaptive output file and store each read_id in dict {decision:[id1, id2, id3...]}"""
     read_dict = {}
@@ -34,12 +32,13 @@ def get_reads(adaptive_output):
 
     for key in read_dict:
         print("{0} reads = {1}".format(key, len(read_dict[key])))
-    print("Skipped reads:")
-    print(*skipped_reads, sep='\n')
 
     # write skipped reads
-    with open(f'{options.output_dir}/{options.run_name}_skipped_reads.txt', 'w') as f:
-        f.write('\n'.join(str(i) for i in skipped_reads))
+    if skipped_reads:
+        print("Skipped reads:")
+        print(*skipped_reads, sep='\n')
+        with open(f'{options.output_dir}/{options.run_name}_skipped_reads.txt', 'w') as f:
+            f.write('\n'.join(str(i) for i in skipped_reads))
 
     return read_dict
 
