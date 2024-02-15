@@ -23,7 +23,7 @@ def nanoSummary(opts):
 
         # Read relevant data from file into pandas dataframe
         data = pd.read_table(pth, sep=":\s+", skiprows=1, nrows=12, names=['metric', s_name],
-                             index_col=0)
+                             index_col=0, engine='python')
         if run_metrics.empty:
             run_metrics = data
         else:
