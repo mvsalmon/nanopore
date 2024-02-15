@@ -18,8 +18,8 @@ def nanoSummary(opts):
         pth = Path(pth.strip())
 
         # Extract sample name from file path
-        s_name = os.path.basename(pth)
-        s_name = str(s_name).removesuffix("NanoStats.txt")
+        s_name = os.path.basename(pth).removesuffix("NanoStats.txt")
+        #s_name = str(s_name)
 
         # Read relevant data from file into pandas dataframe
         data = pd.read_table(pth, sep=":\s+", skiprows=1, nrows=12, names=['metric', s_name],

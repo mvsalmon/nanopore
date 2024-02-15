@@ -3,3 +3,4 @@
 .idea
 /SCRIPTS/Downstream/test.txt
 /SCRIPTS/Downstream/QC_Summary.csv
+/SCRIPTS/Downstream/nanoStatsOnTarget.txt
