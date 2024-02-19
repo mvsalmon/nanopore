@@ -8,24 +8,38 @@ def subset_adaptive():
         with open(f'{options.output_dir}/{options.run_name}_{key}_read_ids.txt', 'w') as fp:
             fp.write('\n'.join(values))
 
-    
+
 def get_reads(adaptive_output):
     """iterate over adaptive output file and store each read_id in dict {decision:[id1, id2, id3...]}"""
     read_dict = {}
+    skipped_reads = []
     with open(adaptive_output, 'r') as f:
         #skip header row
         for header in range(1):
             next(f)
         for line in f:
             read = line.split(',')
-            read_id = read[4].strip()
-            decision = read[6].strip()
-            if decision not in read_dict:
-                read_dict[decision] = [read_id]
-            else:
-                read_dict[decision].append(read_id)
+            try:
+                read_id = read[4].strip()
+                decision = read[6].strip()
+                if decision not in read_dict:
+                    read_dict[decision] = [read_id]
+                else:
+                    read_dict[decision].append(read_id)
+            except IndexError:
+                print(f'Could not find decision for read {read_id}. Skipping...')
+                skipped_reads.append(read_id)
+
     for key in read_dict:
         print("{0} reads = {1}".format(key, len(read_dict[key])))
+
+    # write skipped reads
+    if skipped_reads:
+        print("Skipped reads:")
+        print(*skipped_reads, sep='\n')
+        with open(f'{options.output_dir}/{options.run_name}_skipped_reads.txt', 'w') as f:
+            f.write('\n'.join(str(i) for i in skipped_reads))
+
     return read_dict
 
 
