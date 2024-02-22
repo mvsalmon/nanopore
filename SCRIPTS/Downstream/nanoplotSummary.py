@@ -31,7 +31,7 @@ def nanoSummary(opts):
 
     run_metrics = run_metrics.transpose()
 
-    run_metrics.to_csv("QC_Summary.csv")
+    run_metrics.to_csv(f"{opts.output}.QC_Summary.csv")
 
 
 if __name__ == "__main__":
