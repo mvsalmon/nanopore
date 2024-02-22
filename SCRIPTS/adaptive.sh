@@ -43,7 +43,7 @@ samtools view \
   "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_stop_receiving.bam
 
 samtools sort \
-  -@16 \
+  -@ 16 \
   -o "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
   "$work_dir"/alignment/"$run_name"_stop_receiving.bam
 
