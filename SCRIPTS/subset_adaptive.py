@@ -18,7 +18,11 @@ def get_reads(adaptive_output):
         for header in range(1):
             next(f)
         for line in f:
+            # skip null lines at eof
+            if line.startswith('\x00\x00'):
+                continue
             read = line.split(',')
+                
             try:
                 read_id = read[4].strip()
                 decision = read[6].strip()

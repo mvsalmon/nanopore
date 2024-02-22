@@ -47,9 +47,9 @@ if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
    [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_index" ] 
    
 then
-   echo ""
-   echo "ERROR: Missing one or more required arguments. See help message below.";
-   helpFunction
+   echo "" >&3
+   echo "ERROR: Missing one or more required arguments. See help message below."; >&3
+   helpFunction 
    exit 1
 fi
 
@@ -72,8 +72,6 @@ fi
 #dir variables
 pipeline_dir=$(pwd)
 work_dir="$output_dir"/"$run_name"
-echo $(date)
-echo "INFO: Output Directory: $work_dir"
 
 mkdir -p "$work_dir"/alignment
 #mkdir -p "$work_dir"/fastq/all
@@ -82,13 +80,19 @@ mkdir -p "$work_dir"/pycoQC
 mkdir -p "$work_dir"/coverage/mosdepth
 mkdir -p "$work_dir"/coverage/bedtools
 
+#Set up logging
+exec 3>&1 1>"$output_dir/$run_name/$run_name.log" 2>&1
+
+echo $(date) >&3
+echo "INFO: Output Directory: $work_dir" >&3
+
 ## BASECALLING ##
 #TODO add option for modified bases
 
 if [ -z "$skip_basecalling" ]
 then
-echo $(date)
-echo "INFO: Basecalling..."
+echo $(date) >&3
+echo "INFO: Basecalling..." >&3
 
 #TODO handle errors
 
@@ -96,20 +100,20 @@ echo "INFO: Basecalling..."
 dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
 # generate sequencing summary file
-echo $(date)
-echo "INFO: Generating sequencing summary file..."
+echo $(date) >&3
+echo "INFO: Generating sequencing summary file..." >&3
 dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".summary.tsv
 
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads
 # TODO delete raw bam file
 else
-echo $(date)
-echo "INFO: Skipping basecalling"
+echo $(date) >&3
+echo "INFO: Skipping basecalling" >&3
 fi
 
 if [ ! -f "$work_dir"/alignment/"$run_name".bam ]; then
-echo "INFO: Sorting and indexing bam file..."
+echo "INFO: Sorting and indexing bam file..." >&3
 samtools sort \
 -@ 20 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment/"$run_name".raw.bam
 
@@ -117,7 +121,8 @@ samtools sort \
 samtools index -@ 20 "$work_dir"/alignment/"$run_name".bam
 
 #save stats
-echo "INFO: Generating flagstats..."
+echo $(date) >&3
+echo "INFO: Generating flagstats..." >&3
 samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
 fi
 
@@ -130,11 +135,11 @@ fi
 
 if [ -z "$skip_qc" ]
 then
-echo $(date)
-echo "INFO: Creating summary plots"
+echo $(date) >&3
+echo "INFO: Creating summary plots" >&3
 if [ ! -f "$work_dir"/NanoPlot/summary/"$run_name"NanoPlot-report.html ]; then
 
-echo "INFO: NanoPlot all reads..."
+echo "INFO: NanoPlot all reads..." >&3
 #plots of run using sequencing summary
 # TODO check where sequencing summary from dorado is stored
 NanoPlot \
@@ -146,8 +151,8 @@ NanoPlot \
 
 #plots of alignment using bam file
 # TODO change/remove this? These are all alligned reads, not just on target...
-echo $(date)
-echo "INFO NanoPlot on-target reads..."
+echo $(date) >&3
+echo "INFO NanoPlot on-target reads..." >&3
 NanoPlot \
 --bam "$work_dir"/alignment/"$run_name".bam \
 --outdir "$work_dir"/NanoPlot/bam \
@@ -162,8 +167,8 @@ fi
 ##SV CALLING ##
 if [ -z $skip_SV ]
 then
-echo $(date)
-echo "INFO: Calling SVs"
+echo $(date) >&3
+echo "INFO: Calling SVs" >&3
 #cuteSV
 mkdir "$work_dir"/CuteSV
 
@@ -192,11 +197,11 @@ fi
 ##ADAPTIVE SAMPLING ##
 #change to specify if adaptive when running command?
 #check adaptive sampling output file exists, and get adaptiive sampling data if so
-echo $(date)
+echo $(date) >&3
 if [ "$adaptive_sampling" -eq 1 ]
 then
-  echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..."
-  echo "INFO: Combining adaptive summary files"
+  echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..." >&3
+  echo "INFO: Combining adaptive summary files" >&3
 #combine adaptive sampling summary files
 #find all adaptive sampling summary files
 #TODO check this works with a single file..
@@ -227,8 +232,8 @@ NanoPlot \
 --alength \
 --minqual 8 
 
-else
-  echo "INFO: Skipping adaptive sampling analysis."
+else 
+  echo "INFO: Skipping adaptive sampling analysis." >&3
 fi
 
 ## COVERAGE ##
