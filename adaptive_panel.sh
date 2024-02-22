@@ -50,6 +50,7 @@ then
    echo ""
    echo "ERROR: Missing one or more required arguments. See help message below.";
    helpFunction
+   exit 1
 fi
 
 #check for running guppyd service before use and exit if running
@@ -102,7 +103,12 @@ dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignm
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads
 # TODO delete raw bam file
+else
+echo $(date)
+echo "INFO: Skipping basecalling"
+fi
 
+if [ ! -f "$work_dir"/alignment/"$run_name".bam ]; then
 echo "INFO: Sorting and indexing bam file..."
 samtools sort \
 -@ 20 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment/"$run_name".raw.bam
@@ -113,18 +119,20 @@ samtools index -@ 20 "$work_dir"/alignment/"$run_name".bam
 #save stats
 echo "INFO: Generating flagstats..."
 samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
-
-else
-echo $(date)
-echo "INFO: Skipping basecalling"
 fi
 
+# else
+# echo $(date)
+# echo "INFO: Skipping basecalling"
+# fi
+
 ##QC ##
+
 if [ -z "$skip_qc" ]
 then
 echo $(date)
 echo "INFO: Creating summary plots"
-
+if [ ! -f "$work_dir"/NanoPlot/summary/"$run_name"NanoPlot-report.html ]; then
 
 echo "INFO: NanoPlot all reads..."
 #plots of run using sequencing summary
@@ -137,6 +145,7 @@ NanoPlot \
 --threads 20
 
 #plots of alignment using bam file
+# TODO change/remove this? These are all alligned reads, not just on target...
 echo $(date)
 echo "INFO NanoPlot on-target reads..."
 NanoPlot \
@@ -147,6 +156,7 @@ NanoPlot \
 --prefix "$run_name" \
 --threads 20 \
 --alength # Use aligned read length not sequence read length
+fi
 fi
 
 ##SV CALLING ##
@@ -223,30 +233,31 @@ fi
 
 ## COVERAGE ##
 #is this necessary?
-echo $(date)
-echo "INFO: Calculating coverage"
 
-cd "$work_dir"/coverage/mosdepth 
+# echo $(date)
+# echo "INFO: Calculating coverage"
 
-#use mosdepth to calculate depth
-mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
+# cd "$work_dir"/coverage/mosdepth 
 
-cd ../bedtools
-#get off target reads
-#bedtools to find reads in bam file that do and do not not overlap regions in bam
-#on target
-bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
-#off target with -v
-#might cut this out - doesn't seem that necessary
-bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
+# #use mosdepth to calculate depth
+# mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
 
-samtools index "$run_name"_off_target.bam
-samtools index "$run_name"_on_target.bam
+# cd ../bedtools
+# #get off target reads
+# #bedtools to find reads in bam file that do and do not not overlap regions in bam
+# #on target
+# bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
+# #off target with -v
+# #might cut this out - doesn't seem that necessary
+# bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
 
-#get distribution of read lengths
-samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
-samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
+# samtools index "$run_name"_off_target.bam
+# samtools index "$run_name"_on_target.bam
 
-#depth and coverage calculations on .tsv output from bedtools
+# #get distribution of read lengths
+# samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
+# samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
+
+# #depth and coverage calculations on .tsv output from bedtools
 #already done in adaptive.sh??
 #Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name
