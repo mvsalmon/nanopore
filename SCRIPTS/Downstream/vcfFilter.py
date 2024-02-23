@@ -17,16 +17,17 @@ def filter_vcf(opts):
     sample_names = []
     
     for vcf in paths:
-        # parse file path and construct output
+        # parse file path and construct output for filtered vcf and summary csv
         pth = Path(vcf.strip())
         sample_name = os.path.basename(pth).removesuffix('_sniffles.vcf')
-        output_path = os.path.join(opts.output, f'{sample_name}_sniffles_filtered.vcf')
+        vcf_output_path = os.path.join(opts.output, f'{sample_name}_sniffles_filtered.vcf')
+        csv_output_path = os.path.join(opts.output, f'{sample_name}_vcf_summary.csv')
 
         # Open vcf file
         reader = vcfpy.Reader.from_path(pth)
 
         # Open output file - path to output file + header object from reader
-        writer = vcfpy.Writer.from_path(output_path, reader.header)
+        writer = vcfpy.Writer.from_path(vcf_output_path, reader.header)
         
         # Set up dict to hold summary info
         summary_data = {'Total' : {'Vars': 0},
@@ -68,7 +69,7 @@ def filter_vcf(opts):
         
         
     # Join all summary dfs and save
-    pd.concat(summary_dfs, keys=sample_names).to_csv('vcf_summary.csv')
+    pd.concat(summary_dfs, keys=sample_names).to_csv(csv_output_path)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
