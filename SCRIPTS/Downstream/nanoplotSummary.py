@@ -19,8 +19,8 @@ def nanoSummary(opts):
 
         # Extract sample name from file path
         s_name = os.path.basename(pth).removesuffix("NanoStats.txt")
-        #s_name = str(s_name)
-
+        out_path = os.path.join(opts.output, f'{s_name}_QC_summary.csv')
+        
         # Read relevant data from file into pandas dataframe
         data = pd.read_table(pth, sep=":\s+", skiprows=1, nrows=12, names=['metric', s_name],
                              index_col=0, engine='python')
@@ -31,7 +31,7 @@ def nanoSummary(opts):
 
     run_metrics = run_metrics.transpose()
 
-    run_metrics.to_csv(f"{opts.output}.QC_Summary.csv")
+    run_metrics.to_csv(out_path)
 
 
 if __name__ == "__main__":
@@ -43,7 +43,7 @@ if __name__ == "__main__":
                         help="Path to file containing a list of paths to NanoPlot 'NanoStats' output.")
     parser.add_argument('-o',
                         '--output',
-                        default='summary_output.txt',
-                        help="Name of output file. Default = 'summary_output.txt'")
+                        default='.',
+                        help="Path of output file.")
     opts = parser.parse_args()
     nanoSummary(opts)
