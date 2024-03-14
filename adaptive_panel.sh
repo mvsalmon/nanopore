@@ -239,30 +239,32 @@ fi
 ## COVERAGE ##
 #is this necessary?
 
-# echo $(date)
-# echo "INFO: Calculating coverage"
+echo $(date) >&3
+echo "INFO: Calculating coverage" >&3
 
-# cd "$work_dir"/coverage/mosdepth 
+cd "$work_dir"/coverage/mosdepth 
 
-# #use mosdepth to calculate depth
-# mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
+#use mosdepth to calculate depth
+mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
 
-# cd ../bedtools
-# #get off target reads
-# #bedtools to find reads in bam file that do and do not not overlap regions in bam
-# #on target
-# bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
-# #off target with -v
-# #might cut this out - doesn't seem that necessary
-# bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
+echo "INFO: Running bedtools" >&3
+cd ../bedtools
+#get off target reads
+#bedtools to find reads in bam file that do and do not not overlap regions in bam
+#on target
+bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
+#off target with -v
+#might cut this out - doesn't seem that necessary
+bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
 
-# samtools index "$run_name"_off_target.bam
-# samtools index "$run_name"_on_target.bam
+echo "INFO: Running samtools" >&3
+samtools index "$run_name"_off_target.bam
+samtools index "$run_name"_on_target.bam
 
-# #get distribution of read lengths
-# samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
-# samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
+#get distribution of read lengths
+samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
+samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
 
-# #depth and coverage calculations on .tsv output from bedtools
-#already done in adaptive.sh??
-#Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name
+#depth and coverage calculations on .tsv output from bedtools
+# already done in adaptive.sh??
+# Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r *.tsv $run_name
