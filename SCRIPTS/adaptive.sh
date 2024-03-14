@@ -28,7 +28,7 @@ mkdir -p "$work_dir"/adaptive_stats/depth
 
 #create bam files containg read ids for each adaptive sampling decision
 echo $(date)
-echo "INFO: Subseting bam file..."
+echo "INFO: Subseting bam file..." >&3
 
 ###### subset 
 python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
@@ -50,6 +50,9 @@ samtools sort \
 samtools index \
   "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam
 
+# clean up unsorted bam
+rm "$work_dir"/alignment/"$run_name"_stop_receiving.bam
+
 #TODO bedtools coverage for stop receiving bam file
 bedtools coverage \
   -a "$bed_file" \
@@ -57,7 +60,7 @@ bedtools coverage \
   -d > "$work_dir"/adaptive_stats/depth/"$run_name"_stop_receiving_per_base_depth.tsv
 
 echo $(date)
-echo "INFO: Running descriptive statistics..."
+echo "INFO: Running descriptive statistics..." >&3
 #descriptive stats from adaptive sampling
 Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r \
   "$adaptive_summary" \

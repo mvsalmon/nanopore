@@ -102,7 +102,7 @@ dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$mmi_i
 # generate sequencing summary file
 echo $(date) >&3
 echo "INFO: Generating sequencing summary file..." >&3
-dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".summary.tsv
+dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".sequencing_summary.tsv
 
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads
@@ -126,10 +126,9 @@ echo "INFO: Generating flagstats..." >&3
 samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
 fi
 
-# else
-# echo $(date)
-# echo "INFO: Skipping basecalling"
-# fi
+# clean up unsorted bam file
+rm "$work_dir"/alignment/"$run_name".raw.bam
+
 
 ##QC ##
 
