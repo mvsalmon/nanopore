@@ -1,5 +1,6 @@
 #!/bin/bash
-# TODO logging
+# TODO clean up temp files - unindexed/unsorted bams, dorado models...
+# TODO add vcf filtering script
 #Usage
 helpFunction()
 {
@@ -81,7 +82,8 @@ mkdir -p "$work_dir"/coverage/mosdepth
 mkdir -p "$work_dir"/coverage/bedtools
 
 #Set up logging
-exec 3>&1 1>"$output_dir/$run_name/$run_name.log" 2>&1
+t_stamp=$(date +%H%M_%m%d%y)
+exec 3>&1 1>$output_dir/$run_name/$run_name"_"$t_stamp.log 2>&1
 
 echo $(date) >&3
 echo "INFO: Output Directory: $work_dir" >&3
