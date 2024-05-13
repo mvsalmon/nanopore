@@ -48,8 +48,8 @@ if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
    [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_index" ] 
    
 then
-   echo "" >&3
-   echo "ERROR: Missing one or more required arguments. See help message below."; >&3
+   echo ""
+   echo "ERROR: Missing one or more required arguments. See help message below.";
    helpFunction 
    exit 1
 fi

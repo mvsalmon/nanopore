@@ -8,9 +8,16 @@ import vcfpy
 
 def filter_vcf(opts):
     """Adds 'SUPPORT_MIN' to FILTER field of vcf file where SUPPORT < --min_support"""
-    # Read vcf file paths
-    with open(opts.input, "r") as f:
-        paths = f.readlines()
+    paths = []
+    # Check if input is a path to a vcf file
+    sufx = Path(opts.input).suffix
+
+    if sufx == '.vcf':
+        paths.append(opts.input)
+    else:
+        # Read vcf file paths
+        with open(opts.input, "r") as f:
+            paths = f.readlines()
     
     # Set up lists to hold summary info and sample names
     summary_dfs = []
@@ -75,7 +82,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('-i',
                         '--input',
-                      help='Path to file containing list of vcf files to filter',
+                      help='Path to file containing list of vcf files to filter, or path to single vcf file',
                       required=True)
     parser.add_argument('-o',
                         '--output',
