@@ -6,9 +6,15 @@ import pandas as pd
 
 def nanoSummary(opts):
     """Produce summary file from NanoStats files"""
-    # Read list of NanoStat file paths
-    with open(opts.input, "r") as f:
-        f_paths = f.readlines()
+    f_paths = []
+
+    # Check if input is a list of paths, or single file to be parsed directly.
+    if opts.single_file:
+        f_paths.append(opts.input)
+    else:
+        # Read list of NanoStat file paths
+        with open(opts.input, "r") as f:
+            f_paths = f.readlines()
 
     # Set up empty df to store run data
     run_metrics = pd.DataFrame()
@@ -40,10 +46,14 @@ if __name__ == "__main__":
                         '--input',
                         required=True,
                         #type=Path,
-                        help="Path to file containing a list of paths to NanoPlot 'NanoStats' output.")
+                        help="""Path to file containing a list of paths to NanoPlot 'NanoStats' output. Use --store_true to specify
+                        input file is a single 'NanoStats' output file.""")
     parser.add_argument('-o',
                         '--output',
                         default='.',
                         help="Path of output file.")
+    parser.add_argument('--single_file',
+                        action="store_true",
+                        help="Specify if the input file is a 'Nanostats' output.")
     opts = parser.parse_args()
     nanoSummary(opts)
