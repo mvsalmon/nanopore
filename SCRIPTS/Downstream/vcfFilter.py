@@ -89,8 +89,9 @@ if __name__ == '__main__':
                       help='Path to directory to write output file',
                       default='.')
     parser.add_argument('--min_support',
-                        help='Minimum number of supporting reads per SV',
+                        help='Minimum number of supporting reads per SV. Default = 3',
                         type=int,
+                        default = 3,
                         required=True)
     opts = parser.parse_args()
     print(os.getcwd())
