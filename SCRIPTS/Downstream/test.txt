@@ -1,5 +1,4 @@
-E:/Nanopore/Panel_validation/240110_W2314468/NanoPlot/on_target/240110_W2314468NanoStats.txt
-E:/Nanopore/Panel_validation/240118_Jena_CML_9/NanoPlot/on_target/240118_Jena_CML_9NanoStats.txt
-E:\Nanopore\Panel_validation\240122_W1711312\NanoPlot\on_target\240122_W1711312NanoStats.txt
-E:\Nanopore\Panel_validation\240129_Jena_18A\NanoPlot\on_target\240129_Jena_18ANanoStats.txt
-E:\Nanopore\Panel_validation\E15983\240201_E15983\NanoPlot\on_target\240201_E15983NanoStats.txt
+/mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/Panel_validation/240515_mannheim_221921/NanoPlot/on_target/240515_mannheim_221921NanoStats_post_filtering.txt
+/mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/Panel_validation/240520_mannheim_237498/NanoPlot/on_target/240520_mannheim_237498NanoStats_post_filtering.txt
+/mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/Panel_validation/240508_Mannheim_239975/NanoPlot/on_target/240508_Mannheim_239975NanoStats_post_filtering.txt
+/mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/Panel_validation/240501_mannheim_24_1309/NanoPlot/on_target/240501_mannheim_24_1309NanoStats_post_filtering.txt

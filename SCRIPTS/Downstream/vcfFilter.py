@@ -91,8 +91,7 @@ if __name__ == '__main__':
     parser.add_argument('--min_support',
                         help='Minimum number of supporting reads per SV. Default = 3',
                         type=int,
-                        default = 3,
-                        required=True)
+                        default = 3)
     opts = parser.parse_args()
     print(os.getcwd())
     filter_vcf(opts)
