@@ -9,7 +9,6 @@ Optional: -a Skip adaptive sampling? Y/N. Default N
 
 
 ## Dependencies
-All tools need to be in PATH
 
 Dorado with minimap2,
 Sniffles2,
@@ -19,4 +18,5 @@ NanoPlot,
 samtools,
 bedtools,
 mosdepth,
+SvAnna,
 cuteSV.

@@ -80,6 +80,7 @@ mkdir -p "$work_dir"/NanoPlot
 mkdir -p "$work_dir"/pycoQC
 mkdir -p "$work_dir"/coverage/mosdepth
 mkdir -p "$work_dir"/coverage/bedtools
+mkdir -p "$work_dir"/SvAnna
 
 #Set up logging
 t_stamp=$(date +%H%M_%m%d%y)
@@ -169,7 +170,7 @@ fi
 if [ -z $skip_SV ]
 then
 echo $(date) >&3
-echo "INFO: Calling SVs" >&3
+echo "INFO: Calling SVs..." >&3
 #cuteSV
 mkdir "$work_dir"/CuteSV
 
@@ -191,6 +192,20 @@ cd "$work_dir"/Sniffles
 sniffles --input "$work_dir"/alignment/"$run_name".bam \
 --vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
 --non-germline
+
+# SvAnna annotation prioritising HPO term for myeloid disorders
+echo $(date) >&3
+echo "INFO: Annotating SVs..." >&3
+java -jar ~/Tools/SvAnna/svanna-cli-1.0.4/svanna-cli-1.0.4.jar \
+prioritize \
+-d /home/matt/Tools/SvAnna/database \
+--vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
+--phenotype-term HP:0005547 \
+--n-threads 10 \
+--output-format html \
+--prefix "$run_name" \
+--report-top-variants 50 \
+--out-dir "$work_dir"/SvAnna/
 
 #cd "$pipeline_dir"
 fi

@@ -46,7 +46,7 @@ if __name__ == "__main__":
                         '--input',
                         required=True,
                         #type=Path,
-                        help="""Path to file containing a list of paths to NanoPlot 'NanoStats' output. Use --store_true to specify
+                        help="""Path to file containing a list of paths to NanoPlot 'NanoStats' output. Use --single_file to specify
                         input file is a single 'NanoStats' output file.""")
     parser.add_argument('-o',
                         '--output',
