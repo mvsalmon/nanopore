@@ -139,31 +139,32 @@ if [ -z "$skip_qc" ]
 then
 echo $(date) >&3
 echo "INFO: Creating summary plots" >&3
-if [ ! -f "$work_dir"/NanoPlot/summary/"$run_name"NanoPlot-report.html ]; then
+  if [ ! -f "$work_dir"/NanoPlot/summary/"$run_name"NanoPlot-report.html ]; then
 
-echo "INFO: NanoPlot all reads..." >&3
-#plots of run using sequencing summary
-# TODO check where sequencing summary from dorado is stored
-NanoPlot \
---summary "$work_dir"/alignment/"$run_name".summary.tsv \
---loglength \
---outdir "$work_dir"/NanoPlot/summary \
---prefix "$run_name" \
---threads 20
+  echo "INFO: NanoPlot all reads..." >&3
+  #plots of run using sequencing summary
+  # TODO check where sequencing summary from dorado is stored
+  NanoPlot \
+  --summary "$work_dir"/alignment/"$run_name".sequencing_summary.tsv \
+  --loglength \
+  --outdir "$work_dir"/NanoPlot/summary \
+  --prefix "$run_name" \
+  --threads 20
 
-#plots of alignment using bam file
-# TODO change/remove this? These are all alligned reads, not just on target...
-echo $(date) >&3
-echo "INFO NanoPlot on-target reads..." >&3
-NanoPlot \
---bam "$work_dir"/alignment/"$run_name".bam \
---outdir "$work_dir"/NanoPlot/bam \
---loglength \
---N50 \
---prefix "$run_name" \
---threads 20 \
---alength # Use aligned read length not sequence read length
-fi
+  #plots of alignment using bam file
+  # TODO change/remove this? These are all alligned reads, not just on target...
+  # Use aligned read length not sequence read length
+  echo $(date) >&3
+  echo "INFO NanoPlot on-target reads..." >&3
+  NanoPlot \
+  --bam "$work_dir"/alignment/"$run_name".bam \
+  --outdir "$work_dir"/NanoPlot/bam \
+  --loglength \
+  --N50 \
+  --prefix "$run_name" \
+  --threads 20 \
+  --alength 
+  fi
 fi
 
 ##SV CALLING ##
