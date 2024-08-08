@@ -90,14 +90,13 @@ echo $(date) >&3
 echo "INFO: Output Directory: $work_dir" >&3
 
 ## BASECALLING ##
-#TODO add option for modified bases
+
+#TODO if samtoools doesn't run, then the raw .bam file will be deleted and the pipeline will need to rerun! Check samtoools is available before running!
 
 if [ -z "$skip_basecalling" ]
 then
 echo $(date) >&3
 echo "INFO: Basecalling..." >&3
-
-#TODO handle errors
 
 # dorado basecalling with integrated alignmnet (minimap2)
 dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$mmi_index" hac@v4.3.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
@@ -109,7 +108,6 @@ dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignm
 
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads
-# TODO delete raw bam file
 else
 echo $(date) >&3
 echo "INFO: Skipping basecalling" >&3
@@ -129,9 +127,10 @@ echo "INFO: Generating flagstats..." >&3
 samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
 fi
 
-# clean up unsorted bam file
-rm "$work_dir"/alignment/"$run_name".raw.bam
-
+# check bam file has been sorted and indexed then clean up unsorted bam file
+if [ -s "$work_dir"/alignment/"$run_name".bam ] && [ -s "$work_dir"/alignment/"$run_name".bam.bai]; then
+  rm "$work_dir"/alignment/"$run_name".raw.bam
+fi
 
 ##QC ##
 
