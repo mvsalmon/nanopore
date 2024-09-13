@@ -1,5 +1,5 @@
 .temp*
-nanopore_pipeline.sh
+.nanopore_pipeline.sh
 /.vscode
 /SCRIPTS/Downstream/test.txt
 /SCRIPTS/Downstream/QC_Summary.csv
