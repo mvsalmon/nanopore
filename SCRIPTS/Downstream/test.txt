@@ -1,4 +1,0 @@
-/mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/Panel_validation/240515_mannheim_221921/NanoPlot/on_target/240515_mannheim_221921NanoStats_post_filtering.txt
-/mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/Panel_validation/240520_mannheim_237498/NanoPlot/on_target/240520_mannheim_237498NanoStats_post_filtering.txt
-/mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/Panel_validation/240508_Mannheim_239975/NanoPlot/on_target/240508_Mannheim_239975NanoStats_post_filtering.txt
-/mnt/df7eb093-e564-4217-a060-7a92ee4934a9/Adaptive_panel_runs/Panel_validation/240501_mannheim_24_1309/NanoPlot/on_target/240501_mannheim_24_1309NanoStats_post_filtering.txt
