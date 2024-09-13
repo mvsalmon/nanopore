@@ -5,7 +5,7 @@ Pipeline for basecalling, alignment and SV calling of targeted nanopore sequenci
 adaptive_panel.sh -n *run name* -d *\path\to\sequencing\data* -b *\path\to\adaptive sampling.bed* -o *\path\to\output\directory*
                       -m *\path\to\reference.mmi* -r *\path\to\reference\fasta.fa* 
 
-Optional: -a Skip adaptive sampling? Y/N. Default N
+Optional: -a Skip adaptive sampling analysis? Y/N. Default N
 
 
 ## Dependencies
