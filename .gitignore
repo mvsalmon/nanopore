@@ -1,6 +1,6 @@
 .temp*
-.vscode
-.idea
+nanopore_pipeline.sh
+/.vscode
 /SCRIPTS/Downstream/test.txt
 /SCRIPTS/Downstream/QC_Summary.csv
 /SCRIPTS/Downstream/nanoStatsOnTarget.txt
