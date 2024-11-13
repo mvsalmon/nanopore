@@ -19,13 +19,18 @@ def nanoSummary(opts):
     # Set up empty df to store run data
     run_metrics = pd.DataFrame()
 
+    # Set output name if provided
+    if opts.name:
+        out_path = os.path.join(opts.output, f'{opts.name}_QC_summary.csv')
+
     # Main loop to extract data from each NanoStat file and merge into a single dataframe
     for pth in f_paths:
         pth = Path(pth.strip())
 
         # Extract sample name from file path
         s_name = os.path.basename(pth).removesuffix("NanoStats.txt")
-        out_path = os.path.join(opts.output, f'{s_name}_QC_summary.csv')
+        if not opts.name:
+            out_path = os.path.join(opts.output, f'{s_name}_QC_summary.csv')
         
         # Read relevant data from file into pandas dataframe
         data = pd.read_table(pth, sep=":\s+", skiprows=1, nrows=12, names=['metric', s_name],
@@ -55,5 +60,9 @@ if __name__ == "__main__":
     parser.add_argument('--single_file',
                         action="store_true",
                         help="Specify if the input file is a 'Nanostats' output.")
+    parser.add_argument('-n',
+                        '--name',
+                        help="""Optional name for output file. If --name is not specified, output name will be generated from the file name. 
+                        If a list of files is provided and --name is not specified, output name will be generated from the last file processed.""")
     opts = parser.parse_args()
     nanoSummary(opts)
