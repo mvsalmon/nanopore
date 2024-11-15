@@ -154,7 +154,7 @@ echo "INFO: Creating summary plots" >&3
   # TODO change/remove this? These are all alligned reads, not just on target...
   # Use aligned read length not sequence read length
   echo $(date) >&3
-  echo "INFO NanoPlot on-target reads..." >&3
+  echo "INFO NanoPlot aligned reads..." >&3
   NanoPlot \
   --bam "$work_dir"/alignment/"$run_name".bam \
   --outdir "$work_dir"/NanoPlot/bam \
