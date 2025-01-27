@@ -172,18 +172,18 @@ then
 echo $(date) >&3
 echo "INFO: Calling SVs..." >&3
 #cuteSV
-mkdir "$work_dir"/CuteSV
+# mkdir "$work_dir"/CuteSV
 
 #cuteSV for fusion gene detection
 #TODO make path to ref genome a variable
 
-cuteSV "$work_dir"/alignment/"$run_name".bam \
-"$ref_index" \
-"$work_dir"/CuteSV/"$run_name"_cuteSV.vcf \
-./ \
---max_cluster_bias_DEL 100 \
---diff_ratio_merging_DEL 0.3 \
---max_size -1 #no uppper limit on SV size 
+# cuteSV "$work_dir"/alignment/"$run_name".bam \
+# "$ref_index" \
+# "$work_dir"/CuteSV/"$run_name"_cuteSV.vcf \
+# ./ \
+# --max_cluster_bias_DEL 100 \
+# --diff_ratio_merging_DEL 0.3 \
+# --max_size -1 #no uppper limit on SV size 
 
 #Sniffles
 mkdir "$work_dir"/Sniffles
