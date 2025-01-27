@@ -1,4 +1,5 @@
-# Script to add a filter to Sniffles vcf files base on SV supporting reads
+# Script to add a filter to Sniffles vcf files based on SV supporting reads
+
 import os
 from pathlib import Path
 from argparse import ArgumentParser

@@ -1,16 +1,19 @@
-#subset adaptive sampling output file by deciscion, then get list of readnames for each decision
+# subset adaptive sampling output file by deciscion, then get list of readnames for each decision
 
 def subset_adaptive():
+    """Generate dictionary of adaptive sampling decisions, and read ids for each decision"""
     read_dict = get_reads(options.adaptive_output)
     for key, values in read_dict.items():
-        # out_path = options.output_dir
-        # print(out_path)
         with open(f'{options.output_dir}/{options.run_name}_{key}_read_ids.txt', 'w') as fp:
             fp.write('\n'.join(values))
 
 
 def get_reads(adaptive_output):
-    """iterate over adaptive output file and store each read_id in dict {decision:[id1, id2, id3...]}"""
+    """
+    Iterate over adaptive sampling output file and generate a dict with lists of read ids for each
+    adaptive sampling decision: 
+    {adapitive_sampling_decision:[read1, read2, read3...]}
+    """
     read_dict = {}
     skipped_reads = []
     with open(adaptive_output, 'r') as f:
@@ -30,6 +33,7 @@ def get_reads(adaptive_output):
                     read_dict[decision] = [read_id]
                 else:
                     read_dict[decision].append(read_id)
+            # Handle reads with no associated decision
             except IndexError:
                 print(f'Could not find decision for read {read_id}. Skipping...')
                 skipped_reads.append(read_id)

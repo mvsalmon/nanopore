@@ -1,7 +1,4 @@
-#QDNAseq example
-
-# may need to increase the max size of objects for future package to work properly
-# options(future.globals.maxSize = size_in_mb*1024^2)
+## Rscript to run basic CNA analysis with QDNAseq
 
 library(QDNAseq)
 library(QDNAseq.hg38)
