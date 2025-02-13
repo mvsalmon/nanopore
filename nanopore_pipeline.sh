@@ -1,6 +1,13 @@
 #!/bin/bash
-# TODO clean up temp files - unindexed/unsorted bams, dorado models...
-# TODO add vcf filtering script
+
+#####
+##
+## Pipeline for analysis of targeted Nanopore sequencing data using adaptive sampling 
+## Inteded for the detection of gene fusions in myeloid neoplasms
+## Wessex genomics laboratory
+##
+####
+
 #Usage
 helpFunction()
 {
@@ -16,6 +23,8 @@ helpFunction()
    echo -e "\t-m Path to reference genome mmi index"
    echo -e "\t-r Path to reference genome fa file"
    echo -e "\t-a Adaptive sampling analysis is enabled by default. Set this flag to 0 to skip this analysis"
+   echo -e "\t-p Phenotype term to pass to SvAnna for SV prioritisation."
+
    exit 1 # Exit script after printing help
 }
 
@@ -24,7 +33,7 @@ adaptive_sampling=1
 
 #parse arguments
 #TODO change this from getopts
-while getopts n:d:b:o:m:r:s:l:q:v:ha opt; do
+while getopts n:d:b:o:m:r:p:s:l:q:v:ha opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
@@ -32,6 +41,7 @@ while getopts n:d:b:o:m:r:s:l:q:v:ha opt; do
     o) output_dir="$OPTARG";;
     m) mmi_index="$OPTARG";;
     r) ref_index="$OPTARG";;
+    p) phenotype_term="$OPTARG";;
     #options to skip steps - useful for isolating/debugging specific aspects
     s) skip_basecalling="$OPTARG";;
     l) skip_alignment="$OPTARG";;
@@ -40,12 +50,14 @@ while getopts n:d:b:o:m:r:s:l:q:v:ha opt; do
     #p) skip_adaptive="$OPTARG";;
     h) helpFunction;;
     a) adaptive_sampling=0;;
+    
   esac
 done
 
 #Help if mandatory arguments are empty
 if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
-   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_index" ] 
+   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_index" ] || \
+   [ -z "$phenotype_term" ]
    
 then
    echo ""
@@ -54,18 +66,19 @@ then
    exit 1
 fi
 
-#check for running guppyd service before use and exit if running
+# Check for running dorado service before use and exit if running 
+# This frees up pre-allocated dorado resources for the analysis
 
-# pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
+pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
-# if [[ "$pid" =~ ^[0-9]+$ ]]; then
-#   >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
-#   exit 1
-#   #kill -9 $pid
-#  else
-#    >&2 echo $(date)
-#    >&2 echo "INFO: No running Dorado detected, running new analysis..."
-# fi
+if [[ "$pid" =~ ^[0-9]+$ ]]; then
+  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+  exit 1
+
+ else
+   >&2 echo $(date)
+   >&2 echo "INFO: No running Dorado detected, running new analysis..."
+fi
 
 #####MAIN PIPELINE######
 
@@ -75,7 +88,6 @@ pipeline_dir=$(pwd)
 work_dir="$output_dir"/"$run_name"
 
 mkdir -p "$work_dir"/alignment
-#mkdir -p "$work_dir"/fastq/all
 mkdir -p "$work_dir"/NanoPlot
 mkdir -p "$work_dir"/pycoQC
 mkdir -p "$work_dir"/coverage/mosdepth
@@ -90,8 +102,6 @@ echo $(date) >&3
 echo "INFO: Output Directory: $work_dir" >&3
 
 ## BASECALLING ##
-
-#TODO if samtoools doesn't run, then the raw .bam file will be deleted and the pipeline will need to rerun! Check samtoools is available before running!
 
 if [ -z "$skip_basecalling" ]
 then
@@ -142,7 +152,6 @@ echo "INFO: Creating summary plots" >&3
 
   echo "INFO: NanoPlot all reads..." >&3
   #plots of run using sequencing summary
-  # TODO check where sequencing summary from dorado is stored
   NanoPlot \
   --summary "$work_dir"/alignment/"$run_name".sequencing_summary.tsv \
   --loglength \
@@ -151,7 +160,6 @@ echo "INFO: Creating summary plots" >&3
   --threads 20
 
   #plots of alignment using bam file
-  # TODO change/remove this? These are all alligned reads, not just on target...
   # Use aligned read length not sequence read length
   echo $(date) >&3
   echo "INFO NanoPlot aligned reads..." >&3
@@ -171,19 +179,7 @@ if [ -z $skip_SV ]
 then
 echo $(date) >&3
 echo "INFO: Calling SVs..." >&3
-#cuteSV
-# mkdir "$work_dir"/CuteSV
-
-#cuteSV for fusion gene detection
-#TODO make path to ref genome a variable
-
-# cuteSV "$work_dir"/alignment/"$run_name".bam \
-# "$ref_index" \
-# "$work_dir"/CuteSV/"$run_name"_cuteSV.vcf \
-# ./ \
-# --max_cluster_bias_DEL 100 \
-# --diff_ratio_merging_DEL 0.3 \
-# --max_size -1 #no uppper limit on SV size 
+echo "INFO: Phenotype term used - $phenotype_term" >&3
 
 #Sniffles
 mkdir "$work_dir"/Sniffles
@@ -200,7 +196,7 @@ java -jar ~/Tools/SvAnna/svanna-cli-1.0.4/svanna-cli-1.0.4.jar \
 prioritize \
 -d /home/matt/Tools/SvAnna/database \
 --vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
---phenotype-term HP:0005547 \
+--phenotype-term "$phenotype_term" \
 --n-threads 10 \
 --output-format html \
 --prefix "$run_name" \
@@ -211,24 +207,22 @@ prioritize \
 fi
 
 ##ADAPTIVE SAMPLING ##
-#change to specify if adaptive when running command?
-#check adaptive sampling output file exists, and get adaptiive sampling data if so
+
+# check adaptive sampling output file exists, and get adaptiive sampling data if so
 echo $(date) >&3
 if [ "$adaptive_sampling" -eq 1 ]
 then
   echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..." >&3
   echo "INFO: Combining adaptive summary files" >&3
-#combine adaptive sampling summary files
+
 #find all adaptive sampling summary files
-#TODO check this works with a single file..
 adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
+
 # concatenate adaptive summary files with a single header
 awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
     1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
 #run adaptive sampling analysis script
-# TODO try and speed this step up - subsetting bam files takes forever, another way?
-#samtools view -N takes list of read names to subset by.
 bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 -n "$run_name" \
 -s "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
@@ -237,7 +231,6 @@ bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 
 # Nanplot on target reads
 # use aligned length and filter reads with Q < 8
-# TODO filter bam file first?
 NanoPlot \
 --bam "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
 --outdir "$work_dir"/NanoPlot/on_target \
