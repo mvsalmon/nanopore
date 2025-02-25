@@ -89,7 +89,6 @@ work_dir="$output_dir"/"$run_name"
 
 mkdir -p "$work_dir"/alignment
 mkdir -p "$work_dir"/NanoPlot
-mkdir -p "$work_dir"/pycoQC
 mkdir -p "$work_dir"/coverage/mosdepth
 mkdir -p "$work_dir"/coverage/bedtools
 mkdir -p "$work_dir"/SvAnna
@@ -150,14 +149,14 @@ echo $(date) >&3
 echo "INFO: Creating summary plots" >&3
   if [ ! -f "$work_dir"/NanoPlot/summary/"$run_name"NanoPlot-report.html ]; then
 
-  echo "INFO: NanoPlot all reads..." >&3
-  #plots of run using sequencing summary
-  NanoPlot \
-  --summary "$work_dir"/alignment/"$run_name".sequencing_summary.tsv \
-  --loglength \
-  --outdir "$work_dir"/NanoPlot/summary \
-  --prefix "$run_name" \
-  --threads 20
+  # echo "INFO: NanoPlot all reads..." >&3
+  # #plots of run using sequencing summary
+  # NanoPlot \
+  # --summary "$work_dir"/alignment/"$run_name".sequencing_summary.tsv \
+  # --loglength \
+  # --outdir "$work_dir"/NanoPlot/summary \
+  # --prefix "$run_name" \
+  # --threads 20
 
   #plots of alignment using bam file
   # Use aligned read length not sequence read length
@@ -216,23 +215,23 @@ then
   echo "INFO: Combining adaptive summary files" >&3
 
 #find all adaptive sampling summary files
-adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
+adaptive_files=$(find "$run_dir" -name 'AS_decisions*' -type f)
 
 # concatenate adaptive summary files with a single header
-awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
-    1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
+awk 'FNR==1 && NR!=1 { while (/^read_id/) getline; }
+    1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_AS_decisions.csv
 
 #run adaptive sampling analysis script
 bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 -n "$run_name" \
--s "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
+-s "$work_dir"/"$run_name"_combined_AS_decisions.csv \
 -b "$bed_file" \
 -w "$work_dir"
 
 # Nanplot on target reads
 # use aligned length and filter reads with Q < 8
 NanoPlot \
---bam "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
+--bam "$work_dir"/alignment/"$run_name"_sequenced.sorted.bam \
 --outdir "$work_dir"/NanoPlot/on_target \
 --loglength \
 --N50 \

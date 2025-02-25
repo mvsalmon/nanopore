@@ -16,7 +16,7 @@ sprintf("RUN NAME: %s", args[2])
 adaptive_stats <- function(adaptive_seq, run_name, output_dir) {
 #descriptive stats for nanopore adapitive sampling summary file
 #tally adaptive seq descisions
-  counts <- count(adaptive_seq, decision) %>%
+  counts <- count(adaptive_seq, action) %>%
             mutate(pct = n/sum(n)*100)
 
   write.table(counts,
@@ -25,12 +25,12 @@ adaptive_stats <- function(adaptive_seq, run_name, output_dir) {
 
   #split by decision
   decisions <- adaptive_seq %>%
-    split(f = as.factor(.$decision))
+    split(f = as.factor(.$action))
 
 
   #plot read descisions
   read_count_plot <- ggplot(counts,
-        aes(y = n, x = decision, label = round(pct, 2))) +
+        aes(y = n, x = action, label = round(pct, 2))) +
         geom_bar(stat = 'identity') +
         geom_label() +
         labs(title = paste(run_name),
