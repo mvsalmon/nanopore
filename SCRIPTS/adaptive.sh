@@ -31,6 +31,7 @@ echo $(date)
 echo "INFO: Subseting bam file..." >&3
 
 ###### subset 
+# split read_ids by AS decision
 python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
   --adaptive_output "$adaptive_summary" \
   --output_dir "$work_dir"/adaptive_stats \
@@ -39,25 +40,25 @@ python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
 #subset bam file using samtools
 samtools view \
   -@ 16 \
-  -hN "$work_dir"/adaptive_stats/"$run_name"_stop_receiving_read_ids.txt \
-  "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_stop_receiving.bam
+  -hN "$work_dir"/adaptive_stats/"$run_name"_sequence_read_ids.txt \
+  "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_sequenced.bam
 
 samtools sort \
   -@ 16 \
-  -o "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
-  "$work_dir"/alignment/"$run_name"_stop_receiving.bam
+  -o "$work_dir"/alignment/"$run_name"sequenced.sorted.bam \
+  "$work_dir"/alignment/"$run_name"sequenced.bam
 
 samtools index \
-  "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam
+  "$work_dir"/alignment/"$run_name"sequenced.sorted.bam
 
 # clean up unsorted bam
-rm "$work_dir"/alignment/"$run_name"_stop_receiving.bam
+rm "$work_dir"/alignment/"$run_name"sequenced.bam
 
 #TODO bedtools coverage for stop receiving bam file
 bedtools coverage \
   -a "$bed_file" \
-  -b "$work_dir"/alignment/"$run_name"_stop_receiving.sorted.bam \
-  -d > "$work_dir"/adaptive_stats/depth/"$run_name"_stop_receiving_per_base_depth.tsv
+  -b "$work_dir"/alignment/"$run_name"sequenced.sorted.bam \
+  -d > "$work_dir"/adaptive_stats/depth/"$run_name"_sequenced_per_base_depth.tsv
 
 echo $(date)
 echo "INFO: Running descriptive statistics..." >&3
@@ -72,7 +73,7 @@ Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r \
 #depth and coverage calculations on .tsv output from bedtools
 
 Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r \
-  "$work_dir"/adaptive_stats/depth/"$run_name"_stop_receiving_per_base_depth.tsv\
+  "$work_dir"/adaptive_stats/depth/"$run_name"_sequenced_per_base_depth.tsv\
   "$run_name" \
   "$work_dir"/adaptive_stats/depth
 
