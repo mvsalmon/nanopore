@@ -27,8 +27,8 @@ def get_reads(adaptive_output):
             read = line.split(',')
                 
             try:
-                read_id = read[4].strip()
-                decision = read[6].strip()
+                read_id = read[0].strip()
+                decision = read[1].strip()
                 if decision not in read_dict:
                     read_dict[decision] = [read_id]
                 else:
@@ -39,7 +39,7 @@ def get_reads(adaptive_output):
                 skipped_reads.append(read_id)
 
     for key in read_dict:
-        print("{0} reads = {1}".format(key, len(read_dict[key])))
+        print(f"{key} reads = {len(read_dict[key])}")
 
     # write skipped reads
     if skipped_reads:
