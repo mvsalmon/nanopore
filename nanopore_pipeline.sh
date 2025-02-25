@@ -23,7 +23,7 @@ helpFunction()
    echo -e "\t-m Path to reference genome mmi index"
    echo -e "\t-r Path to reference genome fa file"
    echo -e "\t-a Adaptive sampling analysis is enabled by default. Set this flag to 0 to skip this analysis"
-   echo -e "\t-p Phenotype term to pass to SvAnna for SV prioritisation."
+   echo -e "\t-p Phenotype term to pass to SvAnna for SV prioritisation. Default HP:0001909 (Leukaemia)"
 
    exit 1 # Exit script after printing help
 }
@@ -41,7 +41,7 @@ while getopts n:d:b:o:m:r:p:s:l:q:v:ha opt; do
     o) output_dir="$OPTARG";;
     m) mmi_index="$OPTARG";;
     r) ref_index="$OPTARG";;
-    p) phenotype_term="$OPTARG";;
+    p) phenotype_term="HP:0001909";;
     #options to skip steps - useful for isolating/debugging specific aspects
     s) skip_basecalling="$OPTARG";;
     l) skip_alignment="$OPTARG";;
