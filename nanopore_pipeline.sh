@@ -111,9 +111,9 @@ echo "INFO: Basecalling..." >&3
 dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$mmi_index" hac@v5.0.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
 # generate sequencing summary file
-echo $(date) >&3
-echo "INFO: Generating sequencing summary file..." >&3
-dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".sequencing_summary.tsv
+# echo $(date) >&3
+# echo "INFO: Generating sequencing summary file..." >&3
+# dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".sequencing_summary.tsv
 
 # use samtools to sort, index and generate flagstat file.
 # -@ specifies number of threads
@@ -187,7 +187,7 @@ cd "$work_dir"/Sniffles
 sniffles --input "$work_dir"/alignment/"$run_name".bam \
   --reference "$ref_fasta" \
   --vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
-  --mosaic
+  --threads 12
 
 # SvAnna annotation prioritising HPO term for myeloid disorders
 echo $(date) >&3
