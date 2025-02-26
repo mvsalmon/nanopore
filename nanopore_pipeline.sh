@@ -40,7 +40,7 @@ while getopts n:d:b:o:m:r:p:s:l:q:v:ha opt; do
     b) bed_file="$OPTARG";;
     o) output_dir="$OPTARG";;
     m) mmi_index="$OPTARG";;
-    r) ref_index="$OPTARG";;
+    r) ref_fasta="$OPTARG";;
     p) phenotype_term="HP:0001909";;
     #options to skip steps - useful for isolating/debugging specific aspects
     s) skip_basecalling="$OPTARG";;
@@ -56,7 +56,7 @@ done
 
 #Help if mandatory arguments are empty
 if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
-   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_index" ] || \
+   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_fasta" ] || \
    [ -z "$phenotype_term" ]
    
 then
@@ -180,27 +180,28 @@ echo $(date) >&3
 echo "INFO: Calling SVs..." >&3
 echo "INFO: Phenotype term used - $phenotype_term" >&3
 
-#Sniffles
+# SV calling with Sniffles2
 mkdir "$work_dir"/Sniffles
 cd "$work_dir"/Sniffles
 
 sniffles --input "$work_dir"/alignment/"$run_name".bam \
---vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
---non-germline
+  --reference "$ref_fasta" \
+  --vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
+  --mosaic
 
 # SvAnna annotation prioritising HPO term for myeloid disorders
 echo $(date) >&3
 echo "INFO: Annotating SVs..." >&3
 java -jar ~/Tools/SvAnna/svanna-cli-1.0.4/svanna-cli-1.0.4.jar \
 prioritize \
--d /home/matt/Tools/SvAnna/database \
---vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
---phenotype-term "$phenotype_term" \
---n-threads 10 \
---output-format html \
---prefix "$run_name" \
---report-top-variants 50 \
---out-dir "$work_dir"/SvAnna/
+  -d /home/matt/Tools/SvAnna/database \
+  --vcf "$work_dir"/Sniffles/"$run_name"_sniffles.vcf \
+  --phenotype-term "$phenotype_term" \
+  --n-threads 10 \
+  --output-format html \
+  --prefix "$run_name" \
+  --report-top-variants 50 \
+  --out-dir "$work_dir"/SvAnna/
 
 #cd "$pipeline_dir"
 fi
