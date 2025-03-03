@@ -38,26 +38,27 @@ python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
   --run_name "$run_name"
 
 #subset bam file using samtools
+echo "DEBUG: run name pre samtools view: $run_name"
 samtools view \
   -@ 16 \
   -hN "$work_dir"/adaptive_stats/"$run_name"_sequence_read_ids.txt \
-  "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_sequenced.bam
+  "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_AS.sequenced.bam
 
 samtools sort \
   -@ 16 \
-  -o "$work_dir"/alignment/"$run_name"sequenced.sorted.bam \
-  "$work_dir"/alignment/"$run_name"sequenced.bam
+  -o "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
+  "$work_dir"/alignment/"$run_name"_AS.sequenced.bam
 
 samtools index \
-  "$work_dir"/alignment/"$run_name"sequenced.sorted.bam
+  "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam
 
 # clean up unsorted bam
-rm "$work_dir"/alignment/"$run_name"sequenced.bam
+rm "$work_dir"/alignment/"$run_name"_AS.sequenced.bam
 
 #TODO bedtools coverage for stop receiving bam file
 bedtools coverage \
   -a "$bed_file" \
-  -b "$work_dir"/alignment/"$run_name"sequenced.sorted.bam \
+  -b "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
   -d > "$work_dir"/adaptive_stats/depth/"$run_name"_sequenced_per_base_depth.tsv
 
 echo $(date)

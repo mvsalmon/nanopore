@@ -71,16 +71,16 @@ fi
 # Check for running dorado service before use and exit if running 
 # This frees up pre-allocated dorado resources for the analysis
 
-# pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
+pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
-# if [[ "$pid" =~ ^[0-9]+$ ]]; then
-#   >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
-#   exit 1
+if [[ "$pid" =~ ^[0-9]+$ ]]; then
+  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+  exit 1
 
-#  else
-#    >&2 echo $(date)
-#    >&2 echo "INFO: No running Dorado detected, running new analysis..."
-# fi
+ else
+   >&2 echo $(date)
+   >&2 echo "INFO: No running Dorado detected, running new analysis..."
+fi
 
 #####MAIN PIPELINE######
 
@@ -219,10 +219,13 @@ then
 
 #find all adaptive sampling summary files
 adaptive_files=$(find "$run_dir" -name 'AS_decisions*' -type f)
+echo 'INFO: AS files found: '$adaptive_files >&3
 
 # concatenate adaptive summary files with a single header
 awk 'FNR==1 && NR!=1 { while (/^read_id/) getline; }
     1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_AS_decisions.csv
+
+echo "DEBUG: run name: $run_name"
 
 #run adaptive sampling analysis script
 bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
@@ -253,7 +256,7 @@ fi
 echo $(date) >&3
 echo "INFO: Calculating coverage" >&3
 
-cd "$work_dir"/coverage/mosdepth 
+cd "$work_dir"/coverage/mosdepth
 
 #use mosdepth to calculate depth
 mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
