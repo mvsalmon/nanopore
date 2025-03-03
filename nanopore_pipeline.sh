@@ -28,12 +28,11 @@ helpFunction()
    exit 1 # Exit script after printing help
 }
 
-#set defaults
-adaptive_sampling=1
+
 
 #parse arguments
 #TODO change this from getopts
-while getopts n:d:b:o:m:r:p:s:l:q:v:ha opt; do
+while getopts n:d:b:o:m:r:s:l:q:v:hap opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
@@ -54,10 +53,13 @@ while getopts n:d:b:o:m:r:p:s:l:q:v:ha opt; do
   esac
 done
 
+#set defaults
+adaptive_sampling=1
+phenotype_term="HP:0001909"
+
 #Help if mandatory arguments are empty
 if [ -z "$run_name" ] || [ -z "$run_dir" ] || [ -z "$output_dir" ] || \
-   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_fasta" ] || \
-   [ -z "$phenotype_term" ]
+   [ -z "$mmi_index" ] || [ -z "$bed_file" ] || [ -z "$ref_fasta" ]
    
 then
    echo ""
@@ -69,16 +71,16 @@ fi
 # Check for running dorado service before use and exit if running 
 # This frees up pre-allocated dorado resources for the analysis
 
-pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
+# pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
-if [[ "$pid" =~ ^[0-9]+$ ]]; then
-  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
-  exit 1
+# if [[ "$pid" =~ ^[0-9]+$ ]]; then
+#   >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+#   exit 1
 
- else
-   >&2 echo $(date)
-   >&2 echo "INFO: No running Dorado detected, running new analysis..."
-fi
+#  else
+#    >&2 echo $(date)
+#    >&2 echo "INFO: No running Dorado detected, running new analysis..."
+# fi
 
 #####MAIN PIPELINE######
 
@@ -108,7 +110,7 @@ echo $(date) >&3
 echo "INFO: Basecalling..." >&3
 
 # dorado basecalling with integrated alignmnet (minimap2)
-dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$mmi_index" hac@v5.0.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
+dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$ref_fasta" hac@v5.0.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
 # generate sequencing summary file
 # echo $(date) >&3
@@ -232,7 +234,7 @@ bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 # Nanplot on target reads
 # use aligned length and filter reads with Q < 8
 NanoPlot \
---bam "$work_dir"/alignment/"$run_name"_sequenced.sorted.bam \
+--bam "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
 --outdir "$work_dir"/NanoPlot/on_target \
 --loglength \
 --N50 \
@@ -256,23 +258,23 @@ cd "$work_dir"/coverage/mosdepth
 #use mosdepth to calculate depth
 mosdepth --by "$bed_file" "$run_name" "$work_dir"/alignment/"$run_name".bam
 
-echo "INFO: Running bedtools" >&3
-cd ../bedtools
-#get off target reads
-#bedtools to find reads in bam file that do and do not not overlap regions in bam
-#on target
-bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
-#off target with -v
-#might cut this out - doesn't seem that necessary
-bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
+# echo "INFO: Running bedtools" >&3
+# cd ../bedtools
+# #get off target reads
+# #bedtools to find reads in bam file that do and do not not overlap regions in bam
+# #on target
+# bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" > "$run_name"_on_target.bam
+# #off target with -v
+# #might cut this out - doesn't seem that necessary
+# bedtools intersect -a "$work_dir"/alignment/"$run_name".bam -b "$bed_file" -v > "$run_name"_off_target.bam
 
-echo "INFO: Running samtools" >&3
-samtools index "$run_name"_off_target.bam
-samtools index "$run_name"_on_target.bam
+# echo "INFO: Running samtools" >&3
+# samtools index "$run_name"_off_target.bam
+# samtools index "$run_name"_on_target.bam
 
-#get distribution of read lengths
-samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
-samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
+# #get distribution of read lengths
+# samtools stats "$run_name"_off_target.bam | grep ^RL | cut -f 2- > off_target_len.txt
+# samtools stats "$run_name"_on_target.bam | grep ^RL | cut -f 2- > on_target_len.txt
 
 #depth and coverage calculations on .tsv output from bedtools
 # already done in adaptive.sh??
