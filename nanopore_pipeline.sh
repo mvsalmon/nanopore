@@ -73,14 +73,14 @@ fi
 
 pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
-if [[ "$pid" =~ ^[0-9]+$ ]]; then
-  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
-  exit 1
+# if [[ "$pid" =~ ^[0-9]+$ ]]; then
+#   >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+#   exit 1
 
- else
-   >&2 echo $(date)
-   >&2 echo "INFO: No running Dorado detected, running new analysis..."
-fi
+#  else
+#    >&2 echo $(date)
+#    >&2 echo "INFO: No running Dorado detected, running new analysis..."
+# fi
 
 #####MAIN PIPELINE######
 
@@ -112,13 +112,6 @@ echo "INFO: Basecalling..." >&3
 # dorado basecalling with integrated alignmnet (minimap2)
 dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$ref_fasta" hac@v5.0.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
-# generate sequencing summary file
-# echo $(date) >&3
-# echo "INFO: Generating sequencing summary file..." >&3
-# dorado summary -v "$work_dir"/alignment/"$run_name".raw.bam > "$work_dir"/alignment/"$run_name".sequencing_summary.tsv
-
-# use samtools to sort, index and generate flagstat file.
-# -@ specifies number of threads
 else
 echo $(date) >&3
 echo "INFO: Skipping basecalling" >&3
@@ -151,19 +144,9 @@ echo $(date) >&3
 echo "INFO: Creating summary plots" >&3
   if [ ! -f "$work_dir"/NanoPlot/summary/"$run_name"NanoPlot-report.html ]; then
 
-  # echo "INFO: NanoPlot all reads..." >&3
-  # #plots of run using sequencing summary
-  # NanoPlot \
-  # --summary "$work_dir"/alignment/"$run_name".sequencing_summary.tsv \
-  # --loglength \
-  # --outdir "$work_dir"/NanoPlot/summary \
-  # --prefix "$run_name" \
-  # --threads 20
-
-  #plots of alignment using bam file
-  # Use aligned read length not sequence read length
   echo $(date) >&3
   echo "INFO NanoPlot aligned reads..." >&3
+  
   NanoPlot \
   --bam "$work_dir"/alignment/"$run_name".bam \
   --outdir "$work_dir"/NanoPlot/bam \
@@ -173,6 +156,9 @@ echo "INFO: Creating summary plots" >&3
   --threads 20 \
   --alength 
   fi
+else
+echo $(date) >&3
+echo "INFO: Skipping QC"
 fi
 
 ##SV CALLING ##
@@ -236,6 +222,7 @@ bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 
 # Nanplot on target reads
 # use aligned length and filter reads with Q < 8
+echo $(date)
 echo "INFO: Nanoplot AS_sequenced reads..." >&3
 NanoPlot \
 --bam "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
@@ -255,7 +242,7 @@ fi
 #is this necessary?
 
 echo $(date) >&3
-echo "INFO: Calculating coverage" >&3
+echo "INFO: Calculating depth" >&3
 
 cd "$work_dir"/coverage/mosdepth
 

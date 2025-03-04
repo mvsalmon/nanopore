@@ -56,6 +56,8 @@ samtools index \
 rm "$work_dir"/alignment/"$run_name"_AS.sequenced.bam
 
 #TODO bedtools coverage for stop receiving bam file
+echo $(date)
+echo "INFO: Calculating coverage..."
 bedtools coverage \
   -a "$bed_file" \
   -b "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
@@ -72,6 +74,7 @@ Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r \
 #cd ./ADAPTIVE_COVERAGE
 
 #depth and coverage calculations on .tsv output from bedtools
+echo $(date)
 echo "INFO: Running coverage calculations..." >&3
 Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r \
   "$work_dir"/adaptive_stats/depth/"$run_name"_sequenced_per_base_depth.tsv\
