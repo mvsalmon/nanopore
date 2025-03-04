@@ -38,7 +38,7 @@ python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
   --run_name "$run_name"
 
 #subset bam file using samtools
-echo "DEBUG: run name pre samtools view: $run_name"
+
 samtools view \
   -@ 16 \
   -hN "$work_dir"/adaptive_stats/"$run_name"_sequence_read_ids.txt \
@@ -72,7 +72,7 @@ Rscript $pipeline_dir/SCRIPTS/adaptive_stats.r \
 #cd ./ADAPTIVE_COVERAGE
 
 #depth and coverage calculations on .tsv output from bedtools
-
+echo "INFO: Running coverage calculations..." >&3
 Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r \
   "$work_dir"/adaptive_stats/depth/"$run_name"_sequenced_per_base_depth.tsv\
   "$run_name" \

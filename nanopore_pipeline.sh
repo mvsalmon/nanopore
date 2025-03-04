@@ -236,6 +236,7 @@ bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 
 # Nanplot on target reads
 # use aligned length and filter reads with Q < 8
+echo "INFO: Nanoplot AS_sequenced reads..." >&3
 NanoPlot \
 --bam "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
 --outdir "$work_dir"/NanoPlot/on_target \
