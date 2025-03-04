@@ -55,12 +55,16 @@ samtools index \
 # clean up unsorted bam
 rm "$work_dir"/alignment/"$run_name"_AS.sequenced.bam
 
-#TODO bedtools coverage for stop receiving bam file
-echo $(date)
-echo "INFO: Calculating coverage..."
+# On-target coverage
+# Need to use the genome file (-g) and -sorted or will run out of memory
+echo $(date) >&3
+echo "INFO: Calculating on-target coverge..." >&3
+
 bedtools coverage \
   -a "$bed_file" \
   -b "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
+  -g ~/Tools/ref_genome/grch38/grch38.fa.fai \
+  -sorted \
   -d > "$work_dir"/adaptive_stats/depth/"$run_name"_sequenced_per_base_depth.tsv
 
 echo $(date)
@@ -80,5 +84,3 @@ Rscript $pipeline_dir/SCRIPTS/coverage_adaptive_panel.r \
   "$work_dir"/adaptive_stats/depth/"$run_name"_sequenced_per_base_depth.tsv\
   "$run_name" \
   "$work_dir"/adaptive_stats/depth
-
-####
