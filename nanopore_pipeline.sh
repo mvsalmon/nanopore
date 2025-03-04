@@ -73,14 +73,14 @@ fi
 
 pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
-# if [[ "$pid" =~ ^[0-9]+$ ]]; then
-#   >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
-#   exit 1
+if [[ "$pid" =~ ^[0-9]+$ ]]; then
+  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+  exit 1
 
-#  else
-#    >&2 echo $(date)
-#    >&2 echo "INFO: No running Dorado detected, running new analysis..."
-# fi
+ else
+   >&2 echo $(date)
+   >&2 echo "INFO: No running Dorado detected, running new analysis..."
+fi
 
 #####MAIN PIPELINE######
 
