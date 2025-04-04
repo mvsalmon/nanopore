@@ -68,19 +68,6 @@ then
    exit 1
 fi
 
-# Check for running dorado service before use and exit if running 
-# This frees up pre-allocated dorado resources for the analysis
-
-pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
-
-if [[ "$pid" =~ ^[0-9]+$ ]]; then
-  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
-  exit 1
-
- else
-   >&2 echo $(date)
-   >&2 echo "INFO: No running Dorado detected, running new analysis..."
-fi
 
 #####MAIN PIPELINE######
 
@@ -106,6 +93,20 @@ echo "INFO: Output Directory: $work_dir" >&3
 
 if [ -z "$skip_basecalling" ]
 then
+# Check for running dorado service before use and exit if running 
+# This frees up pre-allocated dorado resources for the analysis
+
+pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
+
+if [[ "$pid" =~ ^[0-9]+$ ]]; then
+  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+  exit 1
+
+ else
+   >&2 echo $(date)
+   >&2 echo "INFO: No running Dorado detected, running new analysis..."
+fi
+
 echo $(date) >&3
 echo "INFO: Basecalling..." >&3
 
@@ -132,7 +133,7 @@ samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/align
 fi
 
 # check bam file has been sorted and indexed then clean up unsorted bam file
-if [ -s "$work_dir"/alignment/"$run_name".bam ] && [ -s "$work_dir"/alignment/"$run_name".bam.bai]; then
+if [ -s "$work_dir"/alignment/"$run_name".bam ] && [ -s "$work_dir"/alignment/"$run_name".bam.bai ]; then
   rm "$work_dir"/alignment/"$run_name".raw.bam
 fi
 
@@ -197,6 +198,8 @@ fi
 ##ADAPTIVE SAMPLING ##
 
 # check adaptive sampling output file exists, and get adaptiive sampling data if so
+# TODO: check if adaptive sampling file exists at the top: 
+# if [ "$adaptive_sampling" -eq 1 ] && [ -n $(find "$run_dir" -name "AS_decisions*" -type f) ]
 echo $(date) >&3
 if [ "$adaptive_sampling" -eq 1 ]
 then
