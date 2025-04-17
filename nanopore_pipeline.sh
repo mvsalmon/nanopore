@@ -70,6 +70,12 @@ fi
 
 
 #####MAIN PIPELINE######
+# If run_dir does not exist, exit pipline.
+if [ ! -d "$run_dir" ]
+then
+  echo "ERROR! Run data directory not found! Exiting."
+  exit 1
+fi
 
 #create analysis dirs
 #dir variables
