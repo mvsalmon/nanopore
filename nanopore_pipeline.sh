@@ -96,40 +96,40 @@ then
 # Check for running dorado service before use and exit if running 
 # This frees up pre-allocated dorado resources for the analysis
 
-pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
+  pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
-if [[ "$pid" =~ ^[0-9]+$ ]]; then
-  >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
-  exit 1
+  if [[ "$pid" =~ ^[0-9]+$ ]]; then
+      >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+      exit 1
 
- else
-   >&2 echo $(date)
-   >&2 echo "INFO: No running Dorado detected, running new analysis..."
-fi
+    else
+      >&2 echo $(date)
+      >&2 echo "INFO: No running Dorado detected, running new analysis..."
+  fi
 
-echo $(date) >&3
-echo "INFO: Basecalling..." >&3
+  echo $(date) >&3
+  echo "INFO: Basecalling..." >&3
 
-# dorado basecalling with integrated alignmnet (minimap2)
-dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$ref_fasta" hac@v5.0.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
+  # dorado basecalling with integrated alignmnet (minimap2)
+  dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$ref_fasta" hac@v5.0.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
-else
-echo $(date) >&3
-echo "INFO: Skipping basecalling" >&3
+  else
+  echo $(date) >&3
+  echo "INFO: Skipping basecalling" >&3
 fi
 
 if [ ! -f "$work_dir"/alignment/"$run_name".bam ]; then
-echo "INFO: Sorting and indexing bam file..." >&3
-samtools sort \
--@ 20 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment/"$run_name".raw.bam
+  echo "INFO: Sorting and indexing bam file..." >&3
+  samtools sort \
+  -@ 20 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment/"$run_name".raw.bam
 
-#index sorted bam file
-samtools index -@ 20 "$work_dir"/alignment/"$run_name".bam
+  #index sorted bam file
+  samtools index -@ 20 "$work_dir"/alignment/"$run_name".bam
 
-#save stats
-echo $(date) >&3
-echo "INFO: Generating flagstats..." >&3
-samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
+  #save stats
+  echo $(date) >&3
+  echo "INFO: Generating flagstats..." >&3
+  samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
 fi
 
 # check bam file has been sorted and indexed then clean up unsorted bam file
@@ -141,22 +141,22 @@ fi
 
 if [ -z "$skip_qc" ]
 then
-echo $(date) >&3
-echo "INFO: Creating summary plots" >&3
-  if [ ! -f "$work_dir"/NanoPlot/summary/"$run_name"NanoPlot-report.html ]; then
-
   echo $(date) >&3
-  echo "INFO NanoPlot aligned reads..." >&3
-  
-  NanoPlot \
-  --bam "$work_dir"/alignment/"$run_name".bam \
-  --outdir "$work_dir"/NanoPlot/bam \
-  --loglength \
-  --N50 \
-  --prefix "$run_name" \
-  --threads 20 \
-  --alength 
-  fi
+  echo "INFO: Creating summary plots" >&3
+    if [ ! -f "$work_dir"/NanoPlot/summary/"$run_name"NanoPlot-report.html ]; then
+
+    echo $(date) >&3
+    echo "INFO NanoPlot aligned reads..." >&3
+    
+    NanoPlot \
+    --bam "$work_dir"/alignment/"$run_name".bam \
+    --outdir "$work_dir"/NanoPlot/bam \
+    --loglength \
+    --N50 \
+    --prefix "$run_name" \
+    --threads 20 \
+    --alength 
+    fi
 else
 echo $(date) >&3
 echo "INFO: Skipping QC"
@@ -198,44 +198,47 @@ fi
 ##ADAPTIVE SAMPLING ##
 
 # check adaptive sampling output file exists, and get adaptiive sampling data if so
-# TODO: check if adaptive sampling file exists at the top: 
-# if [ "$adaptive_sampling" -eq 1 ] && [ -n $(find "$run_dir" -name "AS_decisions*" -type f) ]
+
 echo $(date) >&3
 if [ "$adaptive_sampling" -eq 1 ]
-then
-  echo "INFO: Adaptive sampling output detected. Processing adaptive sampling data..." >&3
-  echo "INFO: Combining adaptive summary files" >&3
+  then
+  # Check adaptive sampling file can be found
+  adaptive_files=$(find "$run_dir" -name 'AS_decisions*' -type f)
+  if [ -n "$adaptive_files" ]
+    then
+    echo 'INFO: AS files found: '$adaptive_files >&3
+    echo "INFO: Processing adaptive sampling data..." >&3
+    echo "INFO: Combining adaptive summary files" >&3
+    
+    # concatenate adaptive summary files with a single header
+    awk 'FNR==1 && NR!=1 { while (/^read_id/) getline; }
+        1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_AS_decisions.csv
 
-#find all adaptive sampling summary files
-adaptive_files=$(find "$run_dir" -name 'AS_decisions*' -type f)
-echo 'INFO: AS files found: '$adaptive_files >&3
+    echo "DEBUG: run name: $run_name"
 
-# concatenate adaptive summary files with a single header
-awk 'FNR==1 && NR!=1 { while (/^read_id/) getline; }
-    1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_AS_decisions.csv
+    #run adaptive sampling analysis script
+    bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
+    -n "$run_name" \
+    -s "$work_dir"/"$run_name"_combined_AS_decisions.csv \
+    -b "$bed_file" \
+    -w "$work_dir"
 
-echo "DEBUG: run name: $run_name"
-
-#run adaptive sampling analysis script
-bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
--n "$run_name" \
--s "$work_dir"/"$run_name"_combined_AS_decisions.csv \
--b "$bed_file" \
--w "$work_dir"
-
-# Nanplot on target reads
-# use aligned length and filter reads with Q < 8
-echo $(date)
-echo "INFO: Nanoplot AS_sequenced reads..." >&3
-NanoPlot \
---bam "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
---outdir "$work_dir"/NanoPlot/on_target \
---loglength \
---N50 \
---prefix "$run_name" \
---threads 20 \
---alength \
---minqual 8 
+    # Nanplot on target reads
+    # use aligned length and filter reads with Q < 8
+    echo $(date)
+    echo "INFO: Nanoplot AS_sequenced reads..." >&3
+    NanoPlot \
+    --bam "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
+    --outdir "$work_dir"/NanoPlot/on_target \
+    --loglength \
+    --N50 \
+    --prefix "$run_name" \
+    --threads 20 \
+    --alength \
+    --minqual 8 
+  else
+   echo "WARN: No adaptive sampling summary files found! Skipping analysis." >&3
+  fi
 
 else 
   echo "INFO: Skipping adaptive sampling analysis." >&3
