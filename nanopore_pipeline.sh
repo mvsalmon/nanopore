@@ -73,7 +73,7 @@ fi
 # If run_dir does not exist, exit pipline.
 if [ ! -d "$run_dir" ]
 then
-  echo "ERROR! Run data directory not found! Exiting."
+  echo "ERROR! Run data directory not found! Exiting." >&3
   exit 1
 fi
 
@@ -105,12 +105,12 @@ then
   pid=$( nvidia-smi | grep dorado | awk '{print $5}' )
 
   if [[ "$pid" =~ ^[0-9]+$ ]]; then
-      >&2 echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry."
+      echo "EXITING: Running Dorado instance detected. Try: 'sudo service doradod stop' then retry." >&3
       exit 1
 
     else
-      >&2 echo $(date)
-      >&2 echo "INFO: No running Dorado detected, running new analysis..."
+      echo $(date) >&3
+      echo "INFO: No running Dorado detected, running new analysis..." >&3
   fi
 
   echo $(date) >&3
@@ -127,15 +127,15 @@ fi
 if [ ! -f "$work_dir"/alignment/"$run_name".bam ]; then
   echo "INFO: Sorting and indexing bam file..." >&3
   samtools sort \
-  -@ 20 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment/"$run_name".raw.bam
+  -@ 14 -o "$work_dir"/alignment/"$run_name".bam "$work_dir"/alignment/"$run_name".raw.bam
 
   #index sorted bam file
-  samtools index -@ 20 "$work_dir"/alignment/"$run_name".bam
+  samtools index -@ 14 "$work_dir"/alignment/"$run_name".bam
 
   #save stats
   echo $(date) >&3
   echo "INFO: Generating flagstats..." >&3
-  samtools flagstat -@ 20"$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
+  samtools flagstat -@ 14 "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
 fi
 
 # check bam file has been sorted and indexed then clean up unsorted bam file
@@ -160,7 +160,7 @@ then
     --loglength \
     --N50 \
     --prefix "$run_name" \
-    --threads 20 \
+    --threads 14 \
     --alength 
     fi
 else
