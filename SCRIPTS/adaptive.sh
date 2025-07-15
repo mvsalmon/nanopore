@@ -40,12 +40,12 @@ python3 $pipeline_dir/SCRIPTS/subset_adaptive.py \
 #subset bam file using samtools
 
 samtools view \
-  -@ 16 \
+  -@ 20 \
   -hN "$work_dir"/adaptive_stats/"$run_name"_sequence_read_ids.txt \
   "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_AS.sequenced.bam
 
 samtools sort \
-  -@ 16 \
+  -@ 20 \
   -o "$work_dir"/alignment/"$run_name"_AS.sequenced.sorted.bam \
   "$work_dir"/alignment/"$run_name"_AS.sequenced.bam
 
