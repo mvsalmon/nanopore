@@ -53,6 +53,10 @@ while getopts n:d:b:o:m:r:s:l:q:v:hap opt; do
   esac
 done
 
+#Set up logging
+t_stamp=$(date +%H%M_%m%d%y)
+exec 3>&1 1>$output_dir/$run_name/$run_name"_"$t_stamp.log 2>&1
+
 #set defaults
 adaptive_sampling=1
 phenotype_term="HP:0001909"
@@ -87,10 +91,6 @@ mkdir -p "$work_dir"/NanoPlot
 mkdir -p "$work_dir"/coverage/mosdepth
 mkdir -p "$work_dir"/coverage/bedtools
 mkdir -p "$work_dir"/SvAnna
-
-#Set up logging
-t_stamp=$(date +%H%M_%m%d%y)
-exec 3>&1 1>$output_dir/$run_name/$run_name"_"$t_stamp.log 2>&1
 
 echo $(date) >&3
 echo "INFO: Output Directory: $work_dir" >&3
@@ -165,7 +165,7 @@ then
     fi
 else
 echo $(date) >&3
-echo "INFO: Skipping QC"
+echo "INFO: Skipping QC" >&3
 fi
 
 ##SV CALLING ##
@@ -198,7 +198,9 @@ prioritize \
   --report-top-variants 50 \
   --out-dir "$work_dir"/SvAnna/
 
-#cd "$pipeline_dir"
+else
+echo $(date) >&3
+echo "INFO: Skipping SV calling" >&3
 fi
 
 ##ADAPTIVE SAMPLING ##
