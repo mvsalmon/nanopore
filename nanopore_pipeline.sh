@@ -1,6 +1,5 @@
 #!/bin/bash
-# TODO clean up temp files - unindexed/unsorted bams, dorado models...
-# TODO add vcf filtering script
+
 #Usage
 helpFunction()
 {
@@ -23,7 +22,6 @@ helpFunction()
 adaptive_sampling=1
 
 #parse arguments
-#TODO change this from getopts
 while getopts n:d:b:o:m:r:s:l:q:v:ha opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
@@ -220,15 +218,12 @@ then
   echo "INFO: Combining adaptive summary files" >&3
 #combine adaptive sampling summary files
 #find all adaptive sampling summary files
-#TODO check this works with a single file..
 adaptive_files=$(find "$run_dir" -name 'adaptive_sampling*')
 # concatenate adaptive summary files with a single header
 awk 'FNR==1 && NR!=1 { while (/^batch_time/) getline; }
     1 {print}' $adaptive_files > "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv
 
 #run adaptive sampling analysis script
-# TODO try and speed this step up - subsetting bam files takes forever, another way?
-#samtools view -N takes list of read names to subset by.
 bash "$pipeline_dir"/SCRIPTS/adaptive.sh -d "$pipeline_dir" \
 -n "$run_name" \
 -s "$work_dir"/"$run_name"_combined_adaptive_sampling_summary.csv \
