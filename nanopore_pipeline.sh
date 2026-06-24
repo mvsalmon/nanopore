@@ -135,7 +135,7 @@ if [ ! -f "$work_dir"/alignment/"$run_name".bam ]; then
   #save stats
   echo $(date) >&3
   echo "INFO: Generating flagstats..." >&3
-  samtools flagstat -@ 14 "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
+  samtools flagstat "$work_dir"/alignment/"$run_name".bam > "$work_dir"/alignment/"$run_name"_flagstat.txt
 fi
 
 # check bam file has been sorted and indexed then clean up unsorted bam file
