@@ -24,6 +24,7 @@ helpFunction()
    echo -e "\t-r Path to reference genome fa file"
    echo -e "\t-a Adaptive sampling analysis is enabled by default. Set this flag to 0 to skip this analysis"
    echo -e "\t-p Phenotype term to pass to SvAnna for SV prioritisation. Default HP:0001909 (Leukaemia)"
+   ecco -e "\t-c Basecaller model to use. Default hac@v5.2.0"
 
    exit 1 # Exit script after printing help
 }
@@ -32,7 +33,7 @@ helpFunction()
 
 #parse arguments
 #TODO change this from getopts
-while getopts n:d:b:o:m:r:s:l:q:v:hap opt; do
+while getopts n:d:b:c:o:m:r:s:l:q:v:hap opt; do
   case "$opt" in
     n) run_name="$OPTARG";;
     d) run_dir="$OPTARG";;
@@ -41,6 +42,7 @@ while getopts n:d:b:o:m:r:s:l:q:v:hap opt; do
     m) mmi_index="$OPTARG";;
     r) ref_fasta="$OPTARG";;
     p) phenotype_term="HP:0001909";;
+    c) basecaller_model="hac@v5.2.0";;
     #options to skip steps - useful for isolating/debugging specific aspects
     s) skip_basecalling="$OPTARG";;
     l) skip_alignment="$OPTARG";;
@@ -117,7 +119,7 @@ then
   echo "INFO: Basecalling..." >&3
 
   # dorado basecalling with integrated alignmnet (minimap2)
-  dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$ref_fasta" hac@v5.0.0 "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
+  dorado basecaller --device cuda:0 --min-qscore 8 --recursive --reference "$ref_fasta" "$basecaller_model" "$run_dir" > "$work_dir"/alignment/"$run_name".raw.bam
 
   else
   echo $(date) >&3
